@@ -1,0 +1,1518 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Boovik App</title>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --blue-dark: #0f2a5e;
+  --blue: #1a3a8f;
+  --blue-mid: #1e56d6;
+  --blue-light: #3b7ef8;
+  --cyan: #00c6f8;
+  --white: #ffffff;
+  --gray: #64748b;
+  --gray-light: #f0f5ff;
+  --bg: #f4f7fb;
+  --text: #0d1f4e;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+  --border: #e2e8f0;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: 'Heebo', sans-serif; color: var(--text); background: var(--bg); min-height: 100vh; }
+
+/* ===== PAGES ===== */
+.page { display: none; min-height: 100vh; }
+.page.active { display: block; }
+
+/* ===== AUTH PAGE ===== */
+.auth-page {
+  min-height: 100vh;
+  background: linear-gradient(160deg, #0a1e52 0%, #1a3a8f 50%, #1e56d6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  overflow: hidden;
+}
+
+.auth-page::before {
+  content: '';
+  position: absolute;
+  top: -200px; right: -200px;
+  width: 500px; height: 500px;
+  background: radial-gradient(circle, rgba(0,198,248,0.15), transparent 70%);
+  border-radius: 50%;
+}
+
+.auth-card {
+  background: white;
+  border-radius: 24px;
+  padding: 40px 32px;
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 40px 80px rgba(0,0,0,0.3);
+  animation: fadeUp 0.6s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.auth-logo {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.auth-logo-text {
+  font-size: 32px;
+  font-weight: 900;
+  direction: ltr;
+  display: inline-block;
+}
+
+.auth-logo-text .blue { color: var(--blue-mid); }
+.auth-logo-sub { font-size: 13px; color: var(--gray); margin-top: 4px; }
+
+.auth-tabs {
+  display: flex;
+  background: var(--bg);
+  border-radius: 12px;
+  padding: 4px;
+  margin-bottom: 28px;
+}
+
+.auth-tab {
+  flex: 1;
+  border: none;
+  background: transparent;
+  padding: 10px;
+  border-radius: 9px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--gray);
+}
+
+.auth-tab.active {
+  background: white;
+  color: var(--blue);
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.form-group { margin-bottom: 16px; }
+.form-label { font-size: 13px; font-weight: 600; color: var(--text); margin-bottom: 6px; display: block; }
+
+.form-input {
+  width: 100%;
+  border: 2px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 16px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 15px;
+  transition: all 0.2s;
+  outline: none;
+  color: var(--text);
+}
+
+.form-input:focus { border-color: var(--blue-mid); box-shadow: 0 0 0 3px rgba(30,86,214,0.1); }
+
+.btn {
+  width: 100%;
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-family: 'Heebo', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--blue-mid), var(--blue-light));
+  color: white;
+  box-shadow: 0 4px 15px rgba(30,86,214,0.3);
+}
+
+.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(30,86,214,0.4); }
+.btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; }
+
+.auth-error {
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 10px;
+  padding: 10px 14px;
+  font-size: 13px;
+  color: var(--danger);
+  margin-bottom: 16px;
+  display: none;
+}
+
+/* ===== APP LAYOUT ===== */
+.app-layout { display: flex; min-height: 100vh; }
+
+.sidebar {
+  width: 240px;
+  background: linear-gradient(160deg, var(--blue-dark), var(--blue));
+  padding: 24px 16px;
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0; right: 0;
+  height: 100vh;
+  z-index: 50;
+  transition: transform 0.3s;
+}
+
+.sidebar-logo {
+  font-size: 24px;
+  font-weight: 900;
+  color: white;
+  direction: ltr;
+  text-align: center;
+  padding: 8px 0 24px;
+  border-bottom: 1px solid rgba(255,255,255,0.1);
+  margin-bottom: 24px;
+}
+
+.sidebar-logo span { color: var(--cyan); }
+
+.sidebar-biz {
+  background: rgba(255,255,255,0.1);
+  border-radius: 12px;
+  padding: 12px;
+  margin-bottom: 24px;
+  text-align: center;
+}
+
+.sidebar-biz-name { font-size: 14px; font-weight: 700; color: white; }
+.sidebar-biz-slug { font-size: 11px; color: rgba(255,255,255,0.6); margin-top: 2px; }
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-radius: 10px;
+  color: rgba(255,255,255,0.7);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+  border: none;
+  background: transparent;
+  width: 100%;
+  text-align: right;
+  font-family: 'Heebo', sans-serif;
+}
+
+.nav-item:hover { background: rgba(255,255,255,0.1); color: white; }
+.nav-item.active { background: rgba(255,255,255,0.2); color: white; font-weight: 700; }
+.nav-item-icon { font-size: 18px; }
+
+.sidebar-bottom { margin-top: auto; }
+
+.main-content {
+  margin-right: 240px;
+  flex: 1;
+  padding: 24px;
+  min-height: 100vh;
+}
+
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.topbar-title { font-size: 22px; font-weight: 800; }
+.topbar-sub { font-size: 13px; color: var(--gray); margin-top: 2px; }
+
+/* ===== CARDS ===== */
+.card {
+  background: white;
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(30,86,214,0.06);
+  margin-bottom: 20px;
+}
+
+.card-title {
+  font-size: 16px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: var(--blue-dark);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* ===== STATS ===== */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.stat-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(30,86,214,0.06);
+  text-align: center;
+  animation: fadeUp 0.5s ease both;
+}
+
+.stat-num { font-size: 32px; font-weight: 900; color: var(--blue-mid); }
+.stat-label { font-size: 12px; color: var(--gray); margin-top: 4px; font-weight: 500; }
+
+/* ===== APPOINTMENTS ===== */
+.appt-item {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.appt-item:last-child { border-bottom: none; }
+
+.appt-time-badge {
+  background: linear-gradient(135deg, var(--blue-mid), var(--blue-light));
+  color: white;
+  border-radius: 10px;
+  padding: 8px 12px;
+  text-align: center;
+  min-width: 64px;
+  flex-shrink: 0;
+}
+
+.appt-time-main { font-size: 16px; font-weight: 800; }
+.appt-time-date { font-size: 10px; opacity: 0.8; margin-top: 1px; }
+.appt-info { flex: 1; }
+.appt-name { font-size: 14px; font-weight: 700; }
+.appt-service { font-size: 12px; color: var(--gray); margin-top: 2px; }
+
+.badge {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.badge-pending { background: #fef3c7; color: #d97706; }
+.badge-confirmed { background: #d1fae5; color: #059669; }
+.badge-done { background: #f1f5f9; color: #94a3b8; }
+.badge-cancelled { background: #fef2f2; color: #dc2626; }
+
+/* ===== SERVICES ===== */
+.service-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.service-row:last-child { border-bottom: none; }
+.service-icon-box {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.service-info { flex: 1; }
+.service-name { font-size: 14px; font-weight: 600; }
+.service-meta { font-size: 12px; color: var(--gray); margin-top: 2px; }
+.service-price { font-size: 16px; font-weight: 800; color: var(--blue-mid); }
+
+/* ===== BOOKING PAGE ===== */
+.booking-page {
+  min-height: 100vh;
+  background: var(--bg);
+}
+
+.booking-header {
+  background: linear-gradient(135deg, var(--blue-dark), var(--blue-mid));
+  padding: 32px 24px 24px;
+  text-align: center;
+  color: white;
+}
+
+.booking-logo { font-size: 20px; font-weight: 900; direction: ltr; display: inline-block; margin-bottom: 16px; opacity: 0.8; }
+.booking-logo span { color: var(--cyan); }
+.booking-biz-name { font-size: 24px; font-weight: 800; }
+.booking-biz-sub { font-size: 14px; opacity: 0.7; margin-top: 4px; }
+
+.booking-body { max-width: 480px; margin: 0 auto; padding: 24px; }
+
+.step-indicator {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-bottom: 24px;
+}
+
+.step-dot {
+  width: 8px; height: 8px;
+  border-radius: 50%;
+  background: var(--border);
+  transition: all 0.3s;
+}
+
+.step-dot.active { background: var(--blue-mid); width: 24px; border-radius: 4px; }
+.step-dot.done { background: var(--success); }
+
+.booking-card {
+  background: white;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 4px 20px rgba(30,86,214,0.08);
+  margin-bottom: 16px;
+}
+
+.booking-card-title {
+  font-size: 15px;
+  font-weight: 800;
+  color: var(--blue-dark);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.service-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 8px;
+}
+
+.service-option:hover { border-color: var(--blue-light); }
+.service-option.selected { border-color: var(--blue-mid); background: #eff6ff; }
+.service-option-icon { font-size: 22px; }
+.service-option-info { flex: 1; }
+.service-option-name { font-size: 14px; font-weight: 600; }
+.service-option-dur { font-size: 12px; color: var(--gray); }
+.service-option-price { font-size: 16px; font-weight: 800; color: var(--blue-mid); }
+
+.calendar-mini {
+  margin-bottom: 16px;
+}
+
+.cal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 12px;
+}
+
+.cal-month-label { font-size: 15px; font-weight: 700; }
+
+.cal-nav-btn {
+  width: 32px; height: 32px;
+  border: 2px solid var(--border);
+  background: white;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 16px;
+  display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s;
+}
+
+.cal-nav-btn:hover { border-color: var(--blue-mid); color: var(--blue-mid); }
+
+.cal-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.cal-day-name { font-size: 11px; font-weight: 600; color: var(--gray); padding: 4px 0; }
+
+.cal-day {
+  aspect-ratio: 1;
+  border-radius: 8px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  border: 2px solid transparent;
+}
+
+.cal-day:hover:not(.disabled):not(.other) { background: var(--gray-light); }
+.cal-day.today { border-color: var(--blue-mid); color: var(--blue-mid); font-weight: 700; }
+.cal-day.selected { background: var(--blue-mid); color: white; border-color: var(--blue-mid); }
+.cal-day.disabled { opacity: 0.3; cursor: not-allowed; }
+.cal-day.other { opacity: 0.2; cursor: not-allowed; }
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+}
+
+.time-slot {
+  border: 2px solid var(--border);
+  background: white;
+  border-radius: 10px;
+  padding: 10px 6px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Heebo', sans-serif;
+  color: var(--text);
+}
+
+.time-slot:hover { border-color: var(--blue-light); color: var(--blue-mid); }
+.time-slot.selected { background: var(--blue-mid); border-color: var(--blue-mid); color: white; }
+.time-slot.busy { background: var(--bg); color: var(--gray); cursor: not-allowed; font-size: 11px; }
+
+.booking-btn {
+  width: 100%;
+  background: linear-gradient(135deg, var(--blue-mid), var(--blue-light));
+  color: white;
+  border: none;
+  border-radius: 14px;
+  padding: 16px;
+  font-size: 16px;
+  font-weight: 700;
+  font-family: 'Heebo', sans-serif;
+  cursor: pointer;
+  transition: all 0.3s;
+  box-shadow: 0 4px 15px rgba(30,86,214,0.3);
+  margin-top: 8px;
+}
+
+.booking-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 25px rgba(30,86,214,0.4); }
+.booking-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+.summary-box {
+  background: linear-gradient(135deg, #eff6ff, #dbeafe);
+  border: 2px solid #bfdbfe;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 12px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+
+.summary-row:last-child { margin-bottom: 0; }
+.summary-label { color: var(--gray); }
+.summary-value { font-weight: 700; color: var(--blue); }
+
+/* SUCCESS */
+.success-screen {
+  text-align: center;
+  padding: 40px 24px;
+}
+
+.success-icon {
+  width: 80px; height: 80px;
+  background: linear-gradient(135deg, #d1fae5, #a7f3d0);
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 40px;
+  margin: 0 auto 20px;
+  animation: bounce 0.5s ease;
+}
+
+.success-title { font-size: 22px; font-weight: 900; color: var(--blue-dark); margin-bottom: 8px; }
+.success-sub { font-size: 14px; color: var(--gray); line-height: 1.6; margin-bottom: 24px; }
+
+.wa-confirm {
+  background: #d1fae5;
+  border-radius: 14px;
+  padding: 16px;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  text-align: right;
+}
+
+.wa-confirm-icon { font-size: 24px; flex-shrink: 0; }
+.wa-confirm-text { font-size: 13px; color: #065f46; line-height: 1.6; }
+
+/* ANIMATIONS */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes bounce {
+  0% { transform: scale(0); }
+  60% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+/* MOBILE */
+@media (max-width: 768px) {
+  .sidebar { transform: translateX(100%); }
+  .sidebar.open { transform: translateX(0); }
+  .main-content { margin-right: 0; }
+  .mobile-topbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: white;
+    padding: 14px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    position: sticky;
+    top: 0;
+    z-index: 40;
+  }
+}
+
+@media (min-width: 769px) {
+  .mobile-topbar { display: none; }
+}
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 49;
+  display: none;
+}
+
+.overlay.show { display: block; }
+
+/* LINK COPY BOX */
+.link-box {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg);
+  border-radius: 10px;
+  padding: 10px 14px;
+  margin-top: 12px;
+}
+
+.link-text {
+  flex: 1;
+  font-size: 13px;
+  color: var(--blue-mid);
+  font-weight: 600;
+  direction: ltr;
+  text-align: left;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.link-copy-btn {
+  background: var(--blue-mid);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 6px 12px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: 'Heebo', sans-serif;
+  flex-shrink: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--gray);
+}
+
+.empty-icon { font-size: 48px; margin-bottom: 12px; }
+.empty-title { font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+.empty-sub { font-size: 13px; }
+
+/* MODAL */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.3s;
+}
+
+.modal-overlay.show { opacity: 1; pointer-events: all; }
+
+.modal {
+  background: white;
+  border-radius: 20px;
+  padding: 28px;
+  width: 100%;
+  max-width: 400px;
+  transform: scale(0.9);
+  transition: transform 0.3s;
+}
+
+.modal-overlay.show .modal { transform: scale(1); }
+.modal-title { font-size: 18px; font-weight: 800; margin-bottom: 20px; }
+.modal-actions { display: flex; gap: 10px; margin-top: 20px; }
+.btn-sm { padding: 10px 20px; font-size: 14px; border-radius: 10px; border: none; font-family: 'Heebo', sans-serif; font-weight: 700; cursor: pointer; flex: 1; }
+.btn-cancel { background: var(--bg); color: var(--gray); }
+</style>
+</head>
+<body>
+
+<!-- AUTH PAGE -->
+<div id="auth-page" class="page active">
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">
+        <div class="auth-logo-text">Boo<span class="blue">vik</span></div>
+        <div class="auth-logo-sub">מערכת זימון תורים מתקדמת</div>
+      </div>
+
+      <div class="auth-tabs">
+        <button class="auth-tab active" onclick="switchTab('login')">התחברות</button>
+        <button class="auth-tab" onclick="switchTab('register')">הרשמה</button>
+      </div>
+
+      <div id="auth-error" class="auth-error"></div>
+
+      <!-- LOGIN -->
+      <div id="login-form">
+        <div class="form-group">
+          <label class="form-label">אימייל</label>
+          <input type="email" id="login-email" class="form-input" placeholder="your@email.com" dir="ltr">
+        </div>
+        <div class="form-group">
+          <label class="form-label">סיסמא</label>
+          <input type="password" id="login-password" class="form-input" placeholder="••••••••" dir="ltr">
+        </div>
+        <button class="btn btn-primary" onclick="handleLogin()" id="login-btn">כניסה למערכת</button>
+      </div>
+
+      <!-- REGISTER -->
+      <div id="register-form" style="display:none">
+        <div class="form-group">
+          <label class="form-label">שם העסק</label>
+          <input type="text" id="reg-bizname" class="form-input" placeholder="מספרה דוד">
+        </div>
+        <div class="form-group">
+          <label class="form-label">טלפון</label>
+          <input type="tel" id="reg-phone" class="form-input" placeholder="050-0000000" dir="ltr">
+        </div>
+        <div class="form-group">
+          <label class="form-label">אימייל</label>
+          <input type="email" id="reg-email" class="form-input" placeholder="your@email.com" dir="ltr">
+        </div>
+        <div class="form-group">
+          <label class="form-label">סיסמא</label>
+          <input type="password" id="reg-password" class="form-input" placeholder="מינימום 6 תווים" dir="ltr">
+        </div>
+        <button class="btn btn-primary" onclick="handleRegister()" id="register-btn">יצירת חשבון חינם</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- APP PAGE -->
+<div id="app-page" class="page">
+  <div class="overlay" id="overlay" onclick="closeSidebar()"></div>
+
+  <!-- MOBILE TOPBAR -->
+  <div class="mobile-topbar">
+    <button onclick="toggleSidebar()" style="background:none;border:none;font-size:22px;cursor:pointer;">☰</button>
+    <div style="font-size:18px;font-weight:900;direction:ltr;">Boo<span style="color:var(--blue-mid)">vik</span></div>
+    <div style="width:32px;"></div>
+  </div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-logo">Boo<span>vik</span></div>
+    <div class="sidebar-biz">
+      <div class="sidebar-biz-name" id="sidebar-biz-name">העסק שלי</div>
+      <div class="sidebar-biz-slug" id="sidebar-biz-slug">boovik.com/...</div>
+    </div>
+    <button class="nav-item active" onclick="showSection('dashboard')" id="nav-dashboard">
+      <span class="nav-item-icon">📊</span> דשבורד
+    </button>
+    <button class="nav-item" onclick="showSection('appointments')" id="nav-appointments">
+      <span class="nav-item-icon">📅</span> תורים
+    </button>
+    <button class="nav-item" onclick="showSection('services')" id="nav-services">
+      <span class="nav-item-icon">✂️</span> שירותים
+    </button>
+    <button class="nav-item" onclick="showSection('settings')" id="nav-settings">
+      <span class="nav-item-icon">⚙️</span> הגדרות
+    </button>
+    <div class="sidebar-bottom">
+      <button class="nav-item" onclick="handleLogout()">
+        <span class="nav-item-icon">🚪</span> יציאה
+      </button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+    <!-- DASHBOARD -->
+    <div id="section-dashboard">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">שלום! 👋</div>
+          <div class="topbar-sub" id="dash-date">טוען...</div>
+        </div>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-num" id="stat-today">0</div>
+          <div class="stat-label">תורים היום</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-week">0</div>
+          <div class="stat-label">תורים השבוע</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-total">0</div>
+          <div class="stat-label">סה"כ תורים</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-num" id="stat-services">0</div>
+          <div class="stat-label">שירותים</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">🔗 הלינק שלך</div>
+        <p style="font-size:13px; color:var(--gray); margin-bottom:4px;">שלח ללקוחות — הם יזמינו תור ישירות</p>
+        <div class="link-box">
+          <div class="link-text" id="booking-link">טוען...</div>
+          <button class="link-copy-btn" onclick="copyLink()">העתק</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">📅 תורים קרובים</div>
+        <div id="upcoming-list">
+          <div class="empty-state">
+            <div class="empty-icon">📭</div>
+            <div class="empty-title">אין תורים עדיין</div>
+            <div class="empty-sub">שלח את הלינק שלך ללקוחות</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- APPOINTMENTS -->
+    <div id="section-appointments" style="display:none">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">📅 כל התורים</div>
+          <div class="topbar-sub">ניהול תורים</div>
+        </div>
+      </div>
+      <div class="card">
+        <div id="all-appointments-list">
+          <div class="empty-state">
+            <div class="empty-icon">📅</div>
+            <div class="empty-title">אין תורים עדיין</div>
+            <div class="empty-sub">תורים יופיעו כאן ברגע שלקוחות יזמינו</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SERVICES -->
+    <div id="section-services" style="display:none">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">✂️ השירותים שלי</div>
+          <div class="topbar-sub">הוסף ונהל שירותים</div>
+        </div>
+        <button class="btn btn-primary" style="width:auto; padding:10px 20px; font-size:14px;" onclick="openAddService()">+ הוסף שירות</button>
+      </div>
+      <div class="card">
+        <div id="services-list-admin">
+          <div class="empty-state">
+            <div class="empty-icon">✂️</div>
+            <div class="empty-title">אין שירותים עדיין</div>
+            <div class="empty-sub">הוסף שירות ראשון כדי שלקוחות יוכלו להזמין</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div id="section-settings" style="display:none">
+      <div class="topbar">
+        <div>
+          <div class="topbar-title">⚙️ הגדרות</div>
+          <div class="topbar-sub">פרטי העסק</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">פרטי העסק</div>
+        <div class="form-group">
+          <label class="form-label">שם העסק</label>
+          <input type="text" id="settings-name" class="form-input">
+        </div>
+        <div class="form-group">
+          <label class="form-label">טלפון</label>
+          <input type="tel" id="settings-phone" class="form-input" dir="ltr">
+        </div>
+        <button class="btn btn-primary" style="max-width:200px;" onclick="saveSettings()">שמור שינויים</button>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<!-- BOOKING PAGE -->
+<div id="booking-page" class="page">
+  <div class="booking-page">
+    <div class="booking-header">
+      <div class="booking-logo">Boo<span>vik</span></div>
+      <div class="booking-biz-name" id="booking-biz-name">טוען...</div>
+      <div class="booking-biz-sub">הזמנת תור אונליין</div>
+    </div>
+
+    <div class="booking-body">
+      <div class="step-indicator">
+        <div class="step-dot active" id="dot-1"></div>
+        <div class="step-dot" id="dot-2"></div>
+        <div class="step-dot" id="dot-3"></div>
+        <div class="step-dot" id="dot-4"></div>
+      </div>
+
+      <!-- STEP 1: SERVICE -->
+      <div id="booking-step-1">
+        <div class="booking-card">
+          <div class="booking-card-title">✂️ בחר שירות</div>
+          <div id="booking-services-list">
+            <div class="empty-state"><div class="empty-icon">⏳</div><div class="empty-title">טוען שירותים...</div></div>
+          </div>
+        </div>
+        <button class="booking-btn" onclick="goStep(2)" id="btn-step1" disabled>המשך ←</button>
+      </div>
+
+      <!-- STEP 2: DATE -->
+      <div id="booking-step-2" style="display:none">
+        <div class="booking-card">
+          <div class="booking-card-title">📅 בחר תאריך</div>
+          <div class="calendar-mini">
+            <div class="cal-header">
+              <button class="cal-nav-btn" onclick="changeBookingMonth(-1)">›</button>
+              <div class="cal-month-label" id="booking-cal-month">מאי 2025</div>
+              <button class="cal-nav-btn" onclick="changeBookingMonth(1)">‹</button>
+            </div>
+            <div class="cal-grid" id="booking-cal-grid">
+              <div class="cal-day-name">א</div><div class="cal-day-name">ב</div>
+              <div class="cal-day-name">ג</div><div class="cal-day-name">ד</div>
+              <div class="cal-day-name">ה</div><div class="cal-day-name">ו</div>
+              <div class="cal-day-name">ש</div>
+            </div>
+          </div>
+        </div>
+        <button class="booking-btn" onclick="goStep(3)" id="btn-step2" disabled>המשך ←</button>
+        <button onclick="goStep(1)" style="width:100%;background:none;border:none;color:var(--gray);font-family:Heebo,sans-serif;font-size:14px;padding:10px;cursor:pointer;">← חזור</button>
+      </div>
+
+      <!-- STEP 3: TIME -->
+      <div id="booking-step-3" style="display:none">
+        <div class="booking-card">
+          <div class="booking-card-title">🕐 בחר שעה</div>
+          <div class="time-grid" id="booking-time-grid"></div>
+        </div>
+        <button class="booking-btn" onclick="goStep(4)" id="btn-step3" disabled>המשך ←</button>
+        <button onclick="goStep(2)" style="width:100%;background:none;border:none;color:var(--gray);font-family:Heebo,sans-serif;font-size:14px;padding:10px;cursor:pointer;">← חזור</button>
+      </div>
+
+      <!-- STEP 4: DETAILS -->
+      <div id="booking-step-4" style="display:none">
+        <div class="booking-card">
+          <div class="booking-card-title">👤 פרטים אישיים</div>
+          <div class="form-group">
+            <label class="form-label">שם מלא</label>
+            <input type="text" id="customer-name" class="form-input" placeholder="ישראל ישראלי">
+          </div>
+          <div class="form-group">
+            <label class="form-label">מספר טלפון</label>
+            <input type="tel" id="customer-phone" class="form-input" placeholder="050-0000000" dir="ltr">
+          </div>
+          <div class="summary-box" id="booking-summary"></div>
+        </div>
+        <button class="booking-btn" onclick="confirmBooking()" id="btn-confirm">✅ אישור הזמנה</button>
+        <button onclick="goStep(3)" style="width:100%;background:none;border:none;color:var(--gray);font-family:Heebo,sans-serif;font-size:14px;padding:10px;cursor:pointer;">← חזור</button>
+      </div>
+
+      <!-- SUCCESS -->
+      <div id="booking-success" style="display:none">
+        <div class="success-screen">
+          <div class="success-icon">✅</div>
+          <div class="success-title">התור נקבע בהצלחה!</div>
+          <div class="success-sub">קיבלת אישור. נשמח לראותך!</div>
+          <div class="wa-confirm">
+            <div class="wa-confirm-icon">💬</div>
+            <div class="wa-confirm-text">תזכורת תישלח לך בוואטסאפ יום לפני התור.</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD SERVICE MODAL -->
+<div class="modal-overlay" id="add-service-modal">
+  <div class="modal">
+    <div class="modal-title">➕ הוסף שירות</div>
+    <div class="form-group">
+      <label class="form-label">שם השירות</label>
+      <input type="text" id="new-service-name" class="form-input" placeholder="תספורת גברים">
+    </div>
+    <div class="form-group">
+      <label class="form-label">משך (דקות)</label>
+      <input type="number" id="new-service-duration" class="form-input" placeholder="30" dir="ltr">
+    </div>
+    <div class="form-group">
+      <label class="form-label">מחיר (₪)</label>
+      <input type="number" id="new-service-price" class="form-input" placeholder="80" dir="ltr">
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-cancel" onclick="closeAddService()">ביטול</button>
+      <button class="btn-sm btn-primary" onclick="saveService()">שמור</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ===== SUPABASE CONFIG =====
+const SUPABASE_URL = 'https://dgzczueweiyhafmbnhgc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnemN6dWV3ZWl5aGFmbWJuaGdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzQyMjEsImV4cCI6MjA5NTkxMDIyMX0.02a2WG3XKMwGWrKCp48DlC5ZRRDYqoky9Qdz-jqXy3I';
+
+// NOTE: יש להחליף את ה-SUPABASE_KEY עם המפתח האמיתי שלך
+
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+// ===== STATE =====
+let currentUser = null;
+let currentBusiness = null;
+let bookingState = {
+  businessId: null,
+  service: null,
+  date: null,
+  time: null
+};
+let bookingMonth = new Date();
+
+const hebrewMonths = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+
+// ===== ROUTING =====
+function checkRoute() {
+  // בדוק אם יש פרמטר slug ב-URL
+  const params = new URLSearchParams(window.location.search);
+  const slug = params.get('slug');
+  
+  if (slug) {
+    showBookingPage(slug);
+    return;
+  }
+  
+  // אחרת — בדוק session
+  db.auth.getSession().then(({ data }) => {
+    if (data.session) {
+      currentUser = data.session.user;
+      loadApp();
+    }
+    // אין session — auth page נשאר
+  });
+}
+
+// ===== AUTH =====
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active', (i===0 && tab==='login') || (i===1 && tab==='register')));
+  document.getElementById('login-form').style.display = tab === 'login' ? 'block' : 'none';
+  document.getElementById('register-form').style.display = tab === 'register' ? 'block' : 'none';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+function showError(msg) {
+  const el = document.getElementById('auth-error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+async function handleLogin() {
+  const email = document.getElementById('login-email').value;
+  const password = document.getElementById('login-password').value;
+  if (!email || !password) return showError('אנא מלא אימייל וסיסמא');
+  
+  const btn = document.getElementById('login-btn');
+  btn.disabled = true;
+  btn.textContent = 'מתחבר...';
+  
+  const { data, error } = await db.auth.signInWithPassword({ email, password });
+  
+  if (error) {
+    showError('אימייל או סיסמא שגויים');
+    btn.disabled = false;
+    btn.textContent = 'כניסה למערכת';
+    return;
+  }
+  
+  currentUser = data.user;
+  loadApp();
+}
+
+async function handleRegister() {
+  const bizName = document.getElementById('reg-bizname').value;
+  const phone = document.getElementById('reg-phone').value;
+  const email = document.getElementById('reg-email').value;
+  const password = document.getElementById('reg-password').value;
+  
+  if (!bizName || !email || !password) return showError('אנא מלא את כל השדות');
+  if (password.length < 6) return showError('הסיסמא חייבת להיות לפחות 6 תווים');
+  
+  const btn = document.getElementById('register-btn');
+  btn.disabled = true;
+  btn.textContent = 'יוצר חשבון...';
+  
+  const { data, error } = await db.auth.signUp({ email, password });
+  
+  if (error) {
+    showError('שגיאה ביצירת החשבון: ' + error.message);
+    btn.disabled = false;
+    btn.textContent = 'יצירת חשבון חינם';
+    return;
+  }
+  
+  currentUser = data.user;
+  
+  // Create business
+  const slug = bizName.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/g, '') + '-' + Math.random().toString(36).substr(2,4);
+  
+  const { data: biz } = await db.from('businesses').insert({
+    name: bizName,
+    phone: phone,
+    email: email,
+    slug: slug,
+    owner_id: currentUser.id
+  }).select().single();
+  
+  currentBusiness = biz;
+  loadApp();
+}
+
+async function handleLogout() {
+  await db.auth.signOut();
+  currentUser = null;
+  currentBusiness = null;
+  showPage('auth-page');
+}
+
+// ===== APP =====
+async function loadApp() {
+  const { data: biz } = await db.from('businesses').select('*').eq('owner_id', currentUser.id).maybeSingle();
+  currentBusiness = biz;
+  
+  if (currentBusiness) {
+    document.getElementById('sidebar-biz-name').textContent = currentBusiness.name || 'העסק שלי';
+    document.getElementById('sidebar-biz-slug').textContent = `boovik.com/${currentBusiness.slug}`;
+    document.getElementById('booking-link').textContent = `app.boovik.com/app.html?slug=${currentBusiness.slug}`;
+    document.getElementById('settings-name').value = currentBusiness.name || '';
+    document.getElementById('settings-phone').value = currentBusiness.phone || '';
+  } else {
+    // אין עסק — נציג מסך יצירת עסק
+    document.getElementById('sidebar-biz-name').textContent = 'עסק חדש';
+    document.getElementById('sidebar-biz-slug').textContent = 'הגדר את העסק שלך';
+    document.getElementById('booking-link').textContent = 'יש להגדיר עסק תחילה';
+  }
+  
+  const today = new Date();
+  const days = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+  document.getElementById('dash-date').textContent = `יום ${days[today.getDay()]}, ${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+  
+  showPage('app-page');
+  if (currentBusiness) loadDashboard();
+}
+
+async function loadDashboard() {
+  if (!currentBusiness) return;
+  
+  const today = new Date().toISOString().split('T')[0];
+  const weekStart = new Date();
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
+  
+  const { data: all } = await db.from('appointments').select('*, services(name,price)').eq('business_id', currentBusiness.id).order('date').order('time');
+  
+  if (!all) return;
+  
+  const todayAppts = all.filter(a => a.date === today);
+  const weekAppts = all.filter(a => a.date >= weekStart.toISOString().split('T')[0]);
+  
+  document.getElementById('stat-today').textContent = todayAppts.length;
+  document.getElementById('stat-week').textContent = weekAppts.length;
+  document.getElementById('stat-total').textContent = all.length;
+  
+  const { data: services } = await db.from('services').select('*').eq('business_id', currentBusiness.id);
+  document.getElementById('stat-services').textContent = services?.length || 0;
+  
+  // Upcoming
+  const upcoming = all.filter(a => a.date >= today).slice(0, 5);
+  const upcomingEl = document.getElementById('upcoming-list');
+  
+  if (upcoming.length === 0) {
+    upcomingEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-title">אין תורים קרובים</div><div class="empty-sub">שלח את הלינק שלך ללקוחות</div></div>`;
+  } else {
+    upcomingEl.innerHTML = upcoming.map(a => `
+      <div class="appt-item">
+        <div class="appt-time-badge">
+          <div class="appt-time-main">${a.time?.slice(0,5)}</div>
+          <div class="appt-time-date">${formatDate(a.date)}</div>
+        </div>
+        <div class="appt-info">
+          <div class="appt-name">${a.customer_name}</div>
+          <div class="appt-service">${a.services?.name || ''} · ₪${a.services?.price || ''}</div>
+        </div>
+        <span class="badge badge-${a.status}">${statusLabel(a.status)}</span>
+      </div>
+    `).join('');
+  }
+  
+  // All appointments
+  const allEl = document.getElementById('all-appointments-list');
+  if (all.length === 0) {
+    allEl.innerHTML = `<div class="empty-state"><div class="empty-icon">📅</div><div class="empty-title">אין תורים עדיין</div></div>`;
+  } else {
+    allEl.innerHTML = all.map(a => `
+      <div class="appt-item">
+        <div class="appt-time-badge">
+          <div class="appt-time-main">${a.time?.slice(0,5)}</div>
+          <div class="appt-time-date">${formatDate(a.date)}</div>
+        </div>
+        <div class="appt-info">
+          <div class="appt-name">${a.customer_name}</div>
+          <div class="appt-service">${a.services?.name || ''} · 📞 ${a.customer_phone}</div>
+        </div>
+        <span class="badge badge-${a.status}">${statusLabel(a.status)}</span>
+      </div>
+    `).join('');
+  }
+  
+  // Services
+  loadServicesAdmin(services);
+}
+
+function loadServicesAdmin(services) {
+  const el = document.getElementById('services-list-admin');
+  if (!services || services.length === 0) {
+    el.innerHTML = `<div class="empty-state"><div class="empty-icon">✂️</div><div class="empty-title">אין שירותים עדיין</div><div class="empty-sub">הוסף שירות ראשון</div></div>`;
+    return;
+  }
+  
+  el.innerHTML = services.map(s => `
+    <div class="service-row">
+      <div class="service-icon-box">✂️</div>
+      <div class="service-info">
+        <div class="service-name">${s.name}</div>
+        <div class="service-meta">⏱ ${s.duration} דקות</div>
+      </div>
+      <div class="service-price">₪${s.price}</div>
+    </div>
+  `).join('');
+}
+
+// ===== SECTIONS =====
+function showSection(name) {
+  ['dashboard','appointments','services','settings'].forEach(s => {
+    document.getElementById(`section-${s}`).style.display = s === name ? 'block' : 'none';
+    document.getElementById(`nav-${s}`)?.classList.toggle('active', s === name);
+  });
+  if (name === 'appointments' || name === 'services') loadDashboard();
+  closeSidebar();
+}
+
+// ===== SERVICES =====
+function openAddService() {
+  document.getElementById('add-service-modal').classList.add('show');
+}
+
+function closeAddService() {
+  document.getElementById('add-service-modal').classList.remove('show');
+}
+
+async function saveService() {
+  const name = document.getElementById('new-service-name').value;
+  const duration = parseInt(document.getElementById('new-service-duration').value);
+  const price = parseInt(document.getElementById('new-service-price').value);
+  
+  if (!name || !duration || !price) return alert('אנא מלא את כל השדות');
+  
+  await db.from('services').insert({
+    business_id: currentBusiness.id,
+    name, duration, price
+  });
+  
+  closeAddService();
+  loadDashboard();
+}
+
+// ===== SETTINGS =====
+async function saveSettings() {
+  const name = document.getElementById('settings-name').value;
+  const phone = document.getElementById('settings-phone').value;
+  
+  await db.from('businesses').update({ name, phone }).eq('id', currentBusiness.id);
+  currentBusiness.name = name;
+  document.getElementById('sidebar-biz-name').textContent = name;
+  alert('נשמר בהצלחה!');
+}
+
+// ===== BOOKING PAGE =====
+async function showBookingPage(slug) {
+  if (!slug || slug === 'app' || slug === 'index') {
+    showPage('auth-page');
+    return;
+  }
+  
+  const { data: biz } = await db.from('businesses').select('*').eq('slug', slug).single();
+  
+  if (!biz) {
+    document.body.innerHTML = '<div style="text-align:center;padding:60px;font-family:Heebo,sans-serif;"><div style="font-size:48px;margin-bottom:16px;">😕</div><div style="font-size:20px;font-weight:700;">העסק לא נמצא</div></div>';
+    return;
+  }
+  
+  bookingState.businessId = biz.id;
+  document.getElementById('booking-biz-name').textContent = biz.name;
+  showPage('booking-page');
+  loadBookingServices();
+  renderBookingCalendar();
+}
+
+async function loadBookingServices() {
+  const { data: services } = await db.from('services').select('*').eq('business_id', bookingState.businessId);
+  
+  const el = document.getElementById('booking-services-list');
+  if (!services || services.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="empty-title">אין שירותים זמינים</div></div>';
+    return;
+  }
+  
+  el.innerHTML = services.map(s => `
+    <div class="service-option" onclick="selectBookingService(this, '${s.id}', '${s.name}', ${s.price}, ${s.duration})">
+      <div class="service-option-icon">✂️</div>
+      <div class="service-option-info">
+        <div class="service-option-name">${s.name}</div>
+        <div class="service-option-dur">⏱ ${s.duration} דקות</div>
+      </div>
+      <div class="service-option-price">₪${s.price}</div>
+    </div>
+  `).join('');
+}
+
+function selectBookingService(el, id, name, price, duration) {
+  document.querySelectorAll('.service-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+  bookingState.service = { id, name, price, duration };
+  document.getElementById('btn-step1').disabled = false;
+}
+
+function renderBookingCalendar() {
+  const grid = document.getElementById('booking-cal-grid');
+  const label = document.getElementById('booking-cal-month');
+  label.textContent = `${hebrewMonths[bookingMonth.getMonth()]} ${bookingMonth.getFullYear()}`;
+  
+  const existing = grid.querySelectorAll('.cal-day');
+  existing.forEach(d => d.remove());
+  
+  const year = bookingMonth.getFullYear();
+  const month = bookingMonth.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date();
+  const prevDays = new Date(year, month, 0).getDate();
+  
+  for (let i = firstDay - 1; i >= 0; i--) {
+    const d = document.createElement('div');
+    d.className = 'cal-day other';
+    d.textContent = prevDays - i;
+    grid.appendChild(d);
+  }
+  
+  for (let day = 1; day <= daysInMonth; day++) {
+    const d = document.createElement('div');
+    d.className = 'cal-day';
+    d.textContent = day;
+    const thisDate = new Date(year, month, day);
+    const isPast = thisDate < new Date(today.getFullYear(), today.getMonth(), today.getDate());
+    const isSat = thisDate.getDay() === 6;
+    
+    if (isPast || isSat) {
+      d.classList.add('disabled');
+    } else {
+      if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
+        d.classList.add('today');
+      }
+      d.onclick = () => selectBookingDate(d, thisDate);
+    }
+    grid.appendChild(d);
+  }
+}
+
+function selectBookingDate(el, date) {
+  document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+  el.classList.add('selected');
+  bookingState.date = date;
+  document.getElementById('btn-step2').disabled = false;
+  renderTimeSlots();
+}
+
+function renderTimeSlots() {
+  const slots = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','13:00','13:30','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
+  const grid = document.getElementById('booking-time-grid');
+  grid.innerHTML = slots.map(t => `
+    <button class="time-slot" onclick="selectTime(this, '${t}')">${t}</button>
+  `).join('');
+}
+
+function selectTime(el, time) {
+  document.querySelectorAll('.time-slot').forEach(s => s.classList.remove('selected'));
+  el.classList.add('selected');
+  bookingState.time = time;
+  document.getElementById('btn-step3').disabled = false;
+}
+
+function changeBookingMonth(dir) {
+  bookingMonth.setMonth(bookingMonth.getMonth() + dir);
+  renderBookingCalendar();
+}
+
+function goStep(step) {
+  [1,2,3,4].forEach(s => {
+    document.getElementById(`booking-step-${s}`).style.display = s === step ? 'block' : 'none';
+    const dot = document.getElementById(`dot-${s}`);
+    dot.classList.toggle('active', s === step);
+    dot.classList.toggle('done', s < step);
+  });
+  
+  if (step === 4) {
+    const d = bookingState.date;
+    document.getElementById('booking-summary').innerHTML = `
+      <div class="summary-row"><span class="summary-label">שירות:</span><span class="summary-value">${bookingState.service.name}</span></div>
+      <div class="summary-row"><span class="summary-label">תאריך:</span><span class="summary-value">${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}</span></div>
+      <div class="summary-row"><span class="summary-label">שעה:</span><span class="summary-value">${bookingState.time}</span></div>
+      <div class="summary-row"><span class="summary-label">מחיר:</span><span class="summary-value">₪${bookingState.service.price}</span></div>
+    `;
+  }
+}
+
+async function confirmBooking() {
+  const name = document.getElementById('customer-name').value;
+  const phone = document.getElementById('customer-phone').value;
+  
+  if (!name || !phone) return alert('אנא מלא שם וטלפון');
+  
+  const btn = document.getElementById('btn-confirm');
+  btn.disabled = true;
+  btn.textContent = 'שולח...';
+  
+  const d = bookingState.date;
+  const dateStr = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  
+  const { error } = await db.from('appointments').insert({
+    business_id: bookingState.businessId,
+    service_id: bookingState.service.id,
+    customer_name: name,
+    customer_phone: phone,
+    date: dateStr,
+    time: bookingState.time,
+    status: 'confirmed'
+  });
+  
+  if (error) {
+    alert('שגיאה בשמירת התור, נסה שוב');
+    btn.disabled = false;
+    btn.textContent = '✅ אישור הזמנה';
+    return;
+  }
+  
+  document.getElementById('booking-step-4').style.display = 'none';
+  document.getElementById('booking-success').style.display = 'block';
+}
+
+// ===== UTILS =====
+function showPage(id) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+
+function formatDate(dateStr) {
+  if (!dateStr) return '';
+  const [y,m,d] = dateStr.split('-');
+  return `${d}/${m}`;
+}
+
+function statusLabel(status) {
+  const map = { pending: 'ממתין', confirmed: 'מאושר', done: 'הסתיים', cancelled: 'בוטל' };
+  return map[status] || status;
+}
+
+function copyLink() {
+  const link = document.getElementById('booking-link').textContent;
+  navigator.clipboard.writeText(link).then(() => {
+    const btn = document.querySelector('.link-copy-btn');
+    btn.textContent = 'הועתק!';
+    setTimeout(() => btn.textContent = 'העתק', 2000);
+  });
+}
+
+function toggleSidebar() {
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('overlay').classList.toggle('show');
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('overlay').classList.remove('show');
+}
+
+// ===== INIT =====
+// תמיד מציג auth page - ללא routing
+db.auth.getSession().then(({ data }) => {
+  if (data.session) {
+    currentUser = data.session.user;
+    loadApp();
+  }
+  // אין session — auth page נשאר מוצג
+});
+</script>
+</body>
+</html>
