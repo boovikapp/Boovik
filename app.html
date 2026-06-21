@@ -1,0 +1,1395 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Boovik — ניהול תורים</title>
+<link rel="manifest" href="/manifest.json">
+<meta name="theme-color" content="#1e56d6">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@supabase/supabase-js@2"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+<style>
+:root {
+  --navy: #070e1f;
+  --blue-mid: #1e56d6;
+  --blue-light: #3b7ef8;
+  --cyan: #00d4ff;
+  --bg: #f4f8ff;
+  --white: #ffffff;
+  --text: #0d1f3c;
+  --gray: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --warning: #f59e0b;
+  --danger: #ef4444;
+}
+* { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+html { scroll-behavior:smooth; }
+body { font-family:'Heebo',sans-serif; color:var(--text); background:var(--bg); min-height:100vh; }
+
+/* ===== AUTH ===== */
+.page { display:none; min-height:100vh; }
+.page.active { display:block; }
+
+.auth-page {
+  min-height:100vh;
+  background:linear-gradient(160deg,#04091a 0%,#0c1d3a 50%,#1a3a8f 100%);
+  display:flex; align-items:center; justify-content:center; padding:24px;
+}
+.auth-card { background:white; border-radius:24px; padding:36px 24px; width:100%; box-shadow:0 40px 80px rgba(0,0,0,0.3); }
+.auth-logo { text-align:center; font-size:32px; font-weight:900; direction:ltr; margin-bottom:4px; }
+.auth-logo span { color:var(--blue-mid); }
+.auth-sub { text-align:center; font-size:13px; color:var(--gray); margin-bottom:28px; }
+.auth-tabs { display:flex; background:var(--bg); border-radius:12px; padding:4px; margin-bottom:24px; }
+.auth-tab { flex:1; border:none; background:transparent; padding:10px; border-radius:9px; font-family:'Heebo',sans-serif; font-size:14px; font-weight:600; cursor:pointer; color:var(--gray); transition:all 0.2s; }
+.auth-tab.active { background:white; color:var(--blue-mid); box-shadow:0 2px 8px rgba(0,0,0,0.1); }
+.form-group { margin-bottom:16px; }
+.form-label { font-size:13px; font-weight:700; color:var(--text); margin-bottom:6px; display:block; }
+.form-input { width:100%; border:2px solid var(--border); border-radius:12px; padding:13px 16px; font-family:'Heebo',sans-serif; font-size:15px; outline:none; color:var(--text); transition:border-color 0.2s; }
+.form-input:focus { border-color:var(--blue-mid); }
+.btn { width:100%; border:none; border-radius:12px; padding:14px; font-family:'Heebo',sans-serif; font-size:16px; font-weight:700; cursor:pointer; }
+.btn-primary { background:linear-gradient(135deg,var(--blue-mid),var(--blue-light)); color:white; box-shadow:0 4px 15px rgba(30,86,214,0.3); }
+.btn-primary:disabled { opacity:0.6; }
+.auth-error { background:#fef2f2; border:1px solid #fecaca; border-radius:10px; padding:10px 14px; font-size:13px; color:var(--danger); margin-bottom:16px; display:none; }
+.auth-notice { background:#eff6ff; border:1px solid #bfdbfe; border-radius:12px; padding:14px; margin:14px 0; font-size:13px; color:var(--blue-mid); line-height:1.6; }
+.auth-notice strong { display:block; font-size:14px; margin-bottom:4px; }
+.niche-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:6px; }
+.niche-option { border:2px solid var(--border); background:white; border-radius:12px; padding:10px 6px; text-align:center; cursor:pointer; transition:all 0.2s; }
+.niche-option.selected { border-color:var(--blue-mid); background:#eff6ff; }
+.niche-icon { font-size:24px; margin-bottom:4px; }
+.niche-label { font-size:11px; font-weight:600; }
+
+/* ===== APP LAYOUT ===== */
+.app-page { background:var(--bg); min-height:100vh; display:flex; }
+
+/* HEADER */
+.app-header {
+  background:linear-gradient(135deg,#04091a,#0f2a5e,#1a3a8f);
+  padding:20px 20px 28px; position:relative; overflow:hidden;
+}
+.app-header::before {
+  content:''; position:absolute; top:-60px; left:-60px;
+  width:200px; height:200px;
+  background:radial-gradient(circle,rgba(0,212,255,0.12),transparent 70%);
+}
+.header-top { display:flex; align-items:center; justify-content:space-between; margin-bottom:16px; position:relative; z-index:1; }
+.header-logo { font-size:20px; font-weight:900; color:white; direction:ltr; letter-spacing:-0.5px; }
+.header-logo span { color:var(--cyan); }
+.header-actions { display:flex; gap:8px; }
+.header-icon-btn { width:36px; height:36px; background:rgba(255,255,255,0.12); border:none; border-radius:10px; color:white; font-size:16px; cursor:pointer; display:flex; align-items:center; justify-content:center; }
+
+.header-biz { position:relative; z-index:1; }
+.header-biz-name { font-size:22px; font-weight:900; color:white; margin-bottom:4px; }
+.header-date { font-size:13px; color:rgba(255,255,255,0.65); }
+.header-stats { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:18px; position:relative; z-index:1; }
+.header-stat { background:rgba(255,255,255,0.1); border-radius:14px; padding:12px; text-align:center; border:1px solid rgba(255,255,255,0.08); }
+.header-stat-num { font-size:22px; font-weight:900; color:white; }
+.header-stat-label { font-size:10px; color:rgba(255,255,255,0.6); margin-top:2px; font-weight:500; }
+
+/* LINK BAR */
+.link-bar { background:white; margin:16px; border-radius:16px; padding:14px 16px; box-shadow:0 2px 12px rgba(30,86,214,0.08); display:flex; align-items:center; gap:10px; }
+.link-bar-text { flex:1; font-size:12px; color:var(--blue-mid); font-weight:600; direction:ltr; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.link-bar-btn { background:var(--blue-mid); color:white; border:none; border-radius:8px; padding:7px 14px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; white-space:nowrap; }
+
+/* SECTIONS */
+.section { padding:0 16px 16px; }
+.section-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.section-title { font-size:17px; font-weight:800; color:var(--text); }
+.section-action { font-size:13px; color:var(--blue-mid); font-weight:600; background:none; border:none; cursor:pointer; font-family:'Heebo',sans-serif; }
+
+/* APPOINTMENT CARD */
+.appt-card {
+  background:white; border-radius:18px; padding:16px;
+  box-shadow:0 2px 16px rgba(30,86,214,0.07);
+  margin-bottom:10px; display:flex; gap:14px; align-items:center;
+  border:1px solid rgba(30,86,214,0.05);
+  transition:all 0.2s;
+}
+.appt-card:active { transform:scale(0.98); }
+.appt-time-pill {
+  background:linear-gradient(135deg,var(--blue-mid),var(--blue-light));
+  color:white; border-radius:12px; padding:10px 12px;
+  text-align:center; min-width:58px; flex-shrink:0;
+}
+.appt-time-main { font-size:16px; font-weight:900; letter-spacing:-0.5px; }
+.appt-time-date { font-size:10px; opacity:0.8; margin-top:1px; }
+.appt-body { flex:1; min-width:0; }
+.appt-name { font-size:15px; font-weight:800; color:var(--text); }
+.appt-service { font-size:12px; color:var(--gray); margin-top:3px; }
+.appt-actions { display:flex; gap:6px; margin-top:10px; flex-wrap:wrap; }
+.appt-action-btn { border:none; border-radius:8px; padding:5px 10px; font-size:11px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; display:flex; align-items:center; gap:4px; }
+.btn-confirm { background:#d1fae5; color:#059669; }
+.btn-done { background:#f1f5f9; color:#64748b; }
+.btn-cancel { background:#fef2f2; color:#dc2626; }
+.btn-wa { background:#dcf8c6; color:#128c7e; }
+.appt-right { display:flex; flex-direction:column; align-items:flex-end; gap:6px; flex-shrink:0; }
+.status-pill { font-size:10px; font-weight:700; padding:4px 10px; border-radius:20px; white-space:nowrap; }
+.s-booked { background:#dbeafe; color:#1e56d6; }
+.s-confirmed { background:#d1fae5; color:#059669; }
+.s-done { background:#f1f5f9; color:#94a3b8; }
+.s-cancelled { background:#fef2f2; color:#dc2626; }
+.appt-price { font-size:15px; font-weight:900; color:var(--success); }
+
+/* CALENDAR */
+.cal-card { background:white; border-radius:18px; padding:16px; box-shadow:0 2px 16px rgba(30,86,214,0.07); margin:0 16px 16px; }
+.cal-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:14px; }
+.cal-month-label { font-size:15px; font-weight:800; color:var(--text); }
+.cal-nav-btn { width:32px; height:32px; background:var(--bg); border:none; border-radius:9px; cursor:pointer; font-size:16px; display:flex; align-items:center; justify-content:center; }
+.cal-grid { display:grid; grid-template-columns:repeat(7,1fr); gap:3px; }
+.cal-day-name { text-align:center; font-size:10px; font-weight:700; color:var(--gray); padding:4px 0; }
+.cal-day { aspect-ratio:1; border-radius:8px; display:flex; align-items:center; justify-content:center; font-size:13px; font-weight:500; cursor:pointer; position:relative; transition:all 0.15s; }
+.cal-day:active { transform:scale(0.9); }
+.cal-day.other { opacity:0.2; cursor:default; }
+.cal-day.today { border:2px solid var(--blue-mid); color:var(--blue-mid); font-weight:800; }
+.cal-day.selected { background:var(--blue-mid); color:white; font-weight:800; }
+.cal-day.has-dot::after { content:''; position:absolute; bottom:2px; width:4px; height:4px; background:var(--success); border-radius:50%; }
+.cal-day.selected.has-dot::after { background:rgba(255,255,255,0.8); }
+
+/* DAY POPUP */
+.day-popup { background:white; border-radius:18px; padding:16px; margin:0 16px 16px; box-shadow:0 4px 24px rgba(30,86,214,0.12); border:1px solid rgba(30,86,214,0.1); display:none; }
+.day-popup.show { display:block; }
+.day-popup-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; }
+.day-popup-title { font-size:14px; font-weight:800; color:var(--text); }
+.day-popup-enter { background:linear-gradient(135deg,var(--blue-mid),var(--blue-light)); color:white; border:none; border-radius:10px; padding:8px 16px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; }
+.day-popup-close { background:var(--bg); border:none; border-radius:8px; width:28px; height:28px; cursor:pointer; font-size:14px; }
+.popup-appt { display:flex; align-items:center; gap:10px; padding:8px 0; border-bottom:1px solid var(--border); }
+.popup-appt:last-child { border-bottom:none; }
+.popup-time { background:linear-gradient(135deg,var(--blue-mid),var(--blue-light)); color:white; border-radius:8px; padding:5px 9px; font-size:11px; font-weight:800; min-width:46px; text-align:center; }
+.popup-info { flex:1; }
+.popup-name { font-size:13px; font-weight:700; }
+.popup-svc { font-size:11px; color:var(--gray); margin-top:1px; }
+
+/* SIDEBAR */
+.sidebar-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:none; }
+.sidebar-overlay.show { display:block; }
+.sidebar {
+  width:240px; min-height:100vh;
+  background:linear-gradient(160deg,#04091a,#0a1628,#0f2a5e);
+  display:flex; flex-direction:column; padding:0;
+  flex-shrink:0; position:relative;
+}
+/* Mobile: sidebar slides in */
+@media (max-width:768px) {
+  .sidebar {
+    position:fixed; top:0; right:-280px; width:280px; height:100vh;
+    z-index:201; transition:right 0.3s ease;
+  }
+  .sidebar.open { right:0; }
+  .main-content { margin-right:0 !important; }
+  .app-header { display:none; }
+  .mobile-topbar-wrap { display:flex !important; }
+}
+@media (min-width:769px) {
+  .sidebar-overlay { display:none !important; }
+  .mobile-topbar-wrap { display:none !important; }
+}
+.sidebar-header { padding:24px 20px 20px; border-bottom:1px solid rgba(255,255,255,0.08); }
+.sidebar-logo { font-size:22px; font-weight:900; color:white; direction:ltr; letter-spacing:-0.5px; margin-bottom:6px; }
+.sidebar-logo span { color:#00d4ff; }
+.sidebar-biz { font-size:13px; color:rgba(255,255,255,0.6); }
+.sidebar-nav { flex:1; padding:16px 12px; overflow-y:auto; }
+.sidebar-item {
+  display:flex; align-items:center; gap:12px; padding:13px 14px;
+  border-radius:12px; color:rgba(255,255,255,0.7); font-size:15px; font-weight:500;
+  cursor:pointer; transition:all 0.2s; margin-bottom:4px; border:none;
+  background:transparent; width:100%; text-align:right; font-family:'Heebo',sans-serif;
+}
+.sidebar-item:hover { background:rgba(255,255,255,0.08); color:white; }
+.sidebar-item.active { background:rgba(255,255,255,0.15); color:white; font-weight:700; }
+.sidebar-item-icon { font-size:18px; }
+.main-content { flex:1; min-height:100vh; overflow-y:auto; }
+.sidebar-bottom { padding:16px 12px; border-top:1px solid rgba(255,255,255,0.08); }
+
+/* MOBILE TOPBAR */
+.mobile-topbar-wrap { display:none; background:linear-gradient(135deg,#04091a,#0f2a5e); padding:14px 20px; align-items:center; justify-content:space-between; position:sticky; top:0; z-index:100; }
+.mobile-logo { font-size:18px; font-weight:900; color:white; direction:ltr; }
+.mobile-logo span { color:#00d4ff; }
+.hamburger { background:rgba(255,255,255,0.12); border:none; color:white; border-radius:10px; width:38px; height:38px; font-size:18px; cursor:pointer; }
+
+/* SCREEN SECTIONS */
+.screen { display:none; }
+.screen.active { display:block; }
+
+/* SERVICES */
+.service-card { background:white; border-radius:16px; padding:14px 16px; margin-bottom:10px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 12px rgba(30,86,214,0.06); }
+.svc-icon { width:44px; height:44px; background:linear-gradient(135deg,#dbeafe,#bfdbfe); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:22px; flex-shrink:0; }
+.svc-info { flex:1; }
+.svc-name { font-size:14px; font-weight:700; }
+.svc-meta { font-size:12px; color:var(--gray); margin-top:2px; }
+.svc-price { font-size:16px; font-weight:900; color:var(--blue-mid); }
+.svc-btns { display:flex; gap:6px; }
+.svc-btn { border:none; border-radius:8px; padding:6px 10px; font-size:12px; font-weight:700; cursor:pointer; font-family:'Heebo',sans-serif; }
+
+/* REPORTS */
+.report-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-bottom:16px; }
+.report-box { background:white; border-radius:16px; padding:18px; box-shadow:0 2px 12px rgba(30,86,214,0.06); text-align:center; }
+.report-num { font-size:26px; font-weight:900; color:var(--success); }
+.report-label { font-size:11px; color:var(--gray); margin-top:4px; font-weight:600; }
+.filter-row { display:flex; gap:8px; margin-bottom:14px; flex-wrap:wrap; }
+.filter-btn { border:2px solid var(--border); background:white; border-radius:10px; padding:7px 14px; font-family:'Heebo',sans-serif; font-size:13px; font-weight:600; cursor:pointer; color:var(--gray); transition:all 0.2s; }
+.filter-btn.active { background:var(--blue-mid); border-color:var(--blue-mid); color:white; }
+
+/* CUSTOMERS */
+.customer-card { background:white; border-radius:14px; padding:13px 16px; margin-bottom:8px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(30,86,214,0.05); }
+.customer-avatar { width:40px; height:40px; background:linear-gradient(135deg,var(--blue-mid),var(--blue-light)); border-radius:12px; display:flex; align-items:center; justify-content:center; font-size:18px; color:white; font-weight:800; flex-shrink:0; }
+.customer-info { flex:1; }
+.customer-name { font-size:14px; font-weight:700; }
+.customer-phone { font-size:12px; color:var(--gray); margin-top:2px; direction:ltr; text-align:right; }
+.customer-btns { display:flex; gap:6px; }
+.cust-btn { border:none; border-radius:9px; padding:7px 11px; font-size:13px; cursor:pointer; }
+
+/* SETTINGS */
+.settings-card { background:white; border-radius:18px; padding:20px; margin-bottom:14px; box-shadow:0 2px 12px rgba(30,86,214,0.06); }
+.settings-title { font-size:14px; font-weight:800; color:var(--text); margin-bottom:16px; display:flex; align-items:center; gap:8px; }
+.day-toggle { text-align:center; padding:10px 4px; border-radius:10px; border:2px solid var(--border); cursor:pointer; font-size:13px; font-weight:700; color:var(--gray); transition:all 0.2s; }
+.day-toggle.selected { background:var(--blue-mid); border-color:var(--blue-mid); color:white; }
+
+/* BLOCKED */
+.blocked-item { background:white; border-radius:14px; padding:14px; margin-bottom:8px; display:flex; align-items:center; gap:12px; box-shadow:0 2px 8px rgba(30,86,214,0.05); }
+.blocked-time { font-size:15px; font-weight:800; color:var(--danger); }
+.blocked-date { font-size:12px; color:var(--gray); margin-top:2px; }
+
+/* MODALS */
+.modal-overlay { position:fixed; inset:0; background:rgba(0,0,0,0.5); z-index:200; display:flex; align-items:flex-end; justify-content:center; opacity:0; pointer-events:none; transition:opacity 0.3s; }
+.modal-overlay.show { opacity:1; pointer-events:all; }
+.modal { background:white; border-radius:24px 24px 0 0; padding:28px 20px calc(28px + env(safe-area-inset-bottom)); width:100%; max-width:480px; transform:translateY(100%); transition:transform 0.35s cubic-bezier(0.4,0,0.2,1); }
+.modal-overlay.show .modal { transform:translateY(0); }
+.modal-handle { width:36px; height:4px; background:var(--border); border-radius:2px; margin:0 auto 20px; }
+.modal-title { font-size:18px; font-weight:800; margin-bottom:20px; }
+.modal-actions { display:flex; gap:10px; margin-top:20px; }
+.btn-sm { padding:11px 20px; font-size:14px; border-radius:12px; border:none; font-family:'Heebo',sans-serif; font-weight:700; cursor:pointer; flex:1; }
+.btn-cancel { background:var(--bg); color:var(--gray); }
+.emoji-opt { font-size:22px; text-align:center; padding:8px; border-radius:10px; border:2px solid var(--border); cursor:pointer; }
+.emoji-opt.selected { border-color:var(--blue-mid); background:#eff6ff; }
+
+/* EMPTY STATE */
+.empty { text-align:center; padding:48px 20px; color:var(--gray); }
+.empty-icon { font-size:52px; margin-bottom:14px; }
+.empty-title { font-size:16px; font-weight:700; margin-bottom:6px; color:var(--text); }
+.empty-sub { font-size:13px; }
+
+/* FAB */
+.fab { position:fixed; bottom:90px; left:20px; width:52px; height:52px; background:linear-gradient(135deg,var(--blue-mid),var(--blue-light)); border:none; border-radius:16px; color:white; font-size:24px; cursor:pointer; box-shadow:0 6px 20px rgba(30,86,214,0.35); z-index:90; display:flex; align-items:center; justify-content:center; }
+
+/* TOAST */
+.toast { position:fixed; bottom:90px; left:50%; transform:translateX(-50%); background:var(--navy); color:white; border-radius:14px; padding:13px 22px; font-size:14px; font-weight:600; z-index:9999; box-shadow:0 8px 24px rgba(0,0,0,0.2); display:flex; align-items:center; gap:8px; white-space:nowrap; animation:slideUp 0.3s ease; }
+.toast.success { background:#059669; }
+.toast.error { background:#dc2626; }
+
+/* HELP */
+#help-btn { position:fixed; bottom:90px; right:20px; z-index:90; }
+#help-btn button { width:48px; height:48px; border-radius:14px; background:rgba(30,86,214,0.1); border:2px solid rgba(30,86,214,0.2); font-size:20px; cursor:pointer; }
+#help-panel { position:fixed; bottom:150px; right:16px; width:300px; background:white; border-radius:20px; box-shadow:0 8px 30px rgba(0,0,0,0.15); z-index:90; overflow:hidden; display:none; }
+
+@keyframes slideUp { from { opacity:0; transform:translateX(-50%) translateY(20px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+@keyframes fadeUp { from { opacity:0; transform:translateY(20px); } to { opacity:1; transform:translateY(0); } }
+
+/* ADD CUSTOMER MODAL */
+#add-customer-modal .modal { border-radius:24px 24px 0 0; }
+</style>
+</head>
+<body>
+
+<!-- ===== AUTH PAGE ===== -->
+<div id="auth-page" class="page active">
+  <div class="auth-page">
+    <div class="auth-card">
+      <div class="auth-logo">Boo<span>vik</span></div>
+      <div class="auth-sub">מערכת ניהול תורים מתקדמת</div>
+      <div class="auth-tabs" style="margin-top:20px;">
+        <button class="auth-tab active" onclick="switchTab('login')">התחברות</button>
+        <button class="auth-tab" onclick="switchTab('register')">הרשמה לעסק</button>
+      </div>
+      <div id="auth-error" class="auth-error"></div>
+      <div id="login-form">
+        <div class="form-group"><label class="form-label">אימייל</label><input type="email" id="login-email" class="form-input" placeholder="your@email.com" dir="ltr"></div>
+        <div class="form-group"><label class="form-label">סיסמא</label><input type="password" id="login-password" class="form-input" placeholder="••••••••" dir="ltr"></div>
+        <button class="btn btn-primary" onclick="handleLogin()" id="login-btn">כניסה למערכת</button>
+        <button onclick="showForgotPassword()" style="width:100%;background:none;border:none;color:var(--blue-mid);font-size:13px;font-weight:600;cursor:pointer;padding:12px;font-family:'Heebo',sans-serif;margin-top:4px;">שכחתי סיסמא 🔑</button>
+      </div>
+
+      <!-- FORGOT PASSWORD -->
+      <div id="forgot-form" style="display:none">
+        <div style="background:#eff6ff;border-radius:12px;padding:14px;margin-bottom:16px;font-size:13px;color:var(--blue-mid);line-height:1.6;">
+          📧 הכנס את האימייל שנרשמת איתו ונשלח לך קישור לאיפוס סיסמא.
+        </div>
+        <div class="form-group">
+          <label class="form-label">אימייל</label>
+          <input type="email" id="forgot-email" class="form-input" placeholder="your@email.com" dir="ltr">
+        </div>
+        <button class="btn btn-primary" onclick="handleForgotPassword()" id="forgot-btn">שלח קישור לאיפוס</button>
+        <button onclick="switchTab('login')" style="width:100%;background:none;border:none;color:var(--gray);font-size:13px;cursor:pointer;padding:12px;font-family:'Heebo',sans-serif;margin-top:4px;">← חזור להתחברות</button>
+      </div>
+
+      <div id="register-form" style="display:none">
+        <div class="auth-notice"><strong>🏪 הרשמה לבעלי עסקים בלבד</strong>מערכת זו מיועדת לעסקים שרוצים לנהל תורים.</div>
+        <div class="form-group"><label class="form-label">שם העסק</label><input type="text" id="reg-bizname" class="form-input" placeholder="לדוגמה: מספרה דוד"></div>
+        <div class="form-group">
+          <label class="form-label">תחום העסק</label>
+          <div class="niche-grid">
+            <div class="niche-option" onclick="selectNiche(this,'hair')"><div class="niche-icon">✂️</div><div class="niche-label">שיער</div></div>
+            <div class="niche-option" onclick="selectNiche(this,'nails')"><div class="niche-icon">💅</div><div class="niche-label">ציפורניים</div></div>
+            <div class="niche-option" onclick="selectNiche(this,'beauty')"><div class="niche-icon">💄</div><div class="niche-label">קוסמטיקה</div></div>
+            <div class="niche-option" onclick="selectNiche(this,'fitness')"><div class="niche-icon">💪</div><div class="niche-label">כושר</div></div>
+            <div class="niche-option" onclick="selectNiche(this,'therapy')"><div class="niche-icon">🧠</div><div class="niche-label">טיפול</div></div>
+            <div class="niche-option" onclick="selectNiche(this,'other')"><div class="niche-icon">🏪</div><div class="niche-label">אחר</div></div>
+          </div>
+          <input type="hidden" id="reg-niche" value="">
+        </div>
+        <div class="form-group"><label class="form-label">טלפון</label><input type="tel" id="reg-phone" class="form-input" placeholder="050-0000000" dir="ltr"></div>
+        <div class="form-group"><label class="form-label">אימייל</label><input type="email" id="reg-email" class="form-input" placeholder="your@email.com" dir="ltr"></div>
+        <div class="form-group"><label class="form-label">סיסמא</label><input type="password" id="reg-password" class="form-input" placeholder="מינימום 6 תווים" dir="ltr"></div>
+        <button class="btn btn-primary" onclick="handleRegister()" id="register-btn">✅ צור חשבון חינם</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===== APP PAGE ===== -->
+<div id="app-page" class="page">
+
+  <!-- HEADER -->
+  <div class="app-header">
+    <div class="header-top">
+      <div class="header-logo">Boo<span>vik</span></div>
+      <div class="header-actions">
+        <button class="header-icon-btn" onclick="toggleSidebar()">☰</button>
+      </div>
+    </div>
+    <div class="header-biz">
+      <div class="header-biz-name" id="header-biz-name">העסק שלי</div>
+      <div class="header-date" id="header-date">טוען...</div>
+    </div>
+    <div class="header-stats">
+      <div class="header-stat"><div class="header-stat-num" id="stat-today">0</div><div class="header-stat-label">תורים היום</div></div>
+      <div class="header-stat"><div class="header-stat-num" id="stat-week">0</div><div class="header-stat-label">השבוע</div></div>
+      <div class="header-stat"><div class="header-stat-num" id="stat-income">₪0</div><div class="header-stat-label">הכנסה החודש</div></div>
+    </div>
+  </div>
+
+  <!-- LINK BAR -->
+  <div class="link-bar">
+    <span style="font-size:14px;">🔗</span>
+    <div class="link-bar-text" id="booking-link">טוען...</div>
+    <button class="link-bar-btn" onclick="copyLink()">העתק</button>
+    <button class="link-bar-btn" style="background:#f4f8ff;color:var(--blue-mid);" onclick="downloadQR()">📥 QR</button>
+  </div>
+  <canvas id="qr-canvas" style="display:none;"></canvas>
+
+  <!-- ===== DASHBOARD SCREEN ===== -->
+  <div id="screen-dashboard" class="screen active">
+    <!-- Today's Appointments -->
+    <div class="section">
+      <div class="section-header">
+        <div class="section-title">תורים להיום</div>
+        <button class="section-action" onclick="showScreen('appointments')">הכל ←</button>
+      </div>
+      <div id="today-appts-list">
+        <div class="empty"><div class="empty-icon">📭</div><div class="empty-title">אין תורים היום</div><div class="empty-sub">שלח את הלינק ללקוחות!</div></div>
+      </div>
+    </div>
+
+    <!-- Calendar -->
+    <div class="cal-card">
+      <div class="cal-header">
+        <button class="cal-nav-btn" onclick="changeDashMonth(-1)">›</button>
+        <div class="cal-month-label" id="dash-cal-month">טוען...</div>
+        <button class="cal-nav-btn" onclick="changeDashMonth(1)">‹</button>
+      </div>
+      <div class="cal-grid" id="dash-cal-grid">
+        <div class="cal-day-name">א</div><div class="cal-day-name">ב</div><div class="cal-day-name">ג</div>
+        <div class="cal-day-name">ד</div><div class="cal-day-name">ה</div><div class="cal-day-name">ו</div>
+        <div class="cal-day-name">ש</div>
+      </div>
+    </div>
+
+    <!-- Day popup -->
+    <div class="day-popup" id="day-popup">
+      <div class="day-popup-header">
+        <div class="day-popup-title" id="popup-day-title">תורים</div>
+        <div style="display:flex;gap:8px;">
+          <button class="day-popup-enter" id="popup-enter-btn">כנס ליום זה</button>
+          <button class="day-popup-close" onclick="closeDayPopup()">✕</button>
+        </div>
+      </div>
+      <div id="popup-appts-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== APPOINTMENTS SCREEN ===== -->
+  <div id="screen-appointments" class="screen">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-header">
+        <button onclick="showScreen('dashboard')" style="background:var(--bg);border:none;border-radius:10px;padding:8px 14px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--blue-mid);display:flex;align-items:center;gap:6px;">← דשבורד</button>
+        <div class="section-title">📅 ניהול תורים</div>
+      </div>
+      <div class="filter-row" id="appts-filter-row">
+        <button class="filter-btn active" onclick="filterAppts('today',this)">היום</button>
+        <button class="filter-btn" onclick="filterAppts('tomorrow',this)">מחר</button>
+        <button class="filter-btn" onclick="filterAppts('week',this)">השבוע</button>
+        <button class="filter-btn" onclick="filterAppts('all',this)">הכל</button>
+      </div>
+      <div id="all-appointments-list">
+        <div class="empty"><div class="empty-icon">📅</div><div class="empty-title">אין תורים</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== SERVICES SCREEN ===== -->
+  <div id="screen-services" class="screen">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-header">
+        <button onclick="showScreen('dashboard')" style="background:var(--bg);border:none;border-radius:10px;padding:8px 14px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--blue-mid);display:flex;align-items:center;gap:6px;">← דשבורד</button>
+        <div class="section-title">✂️ שירותים</div>
+        <button class="section-action" onclick="openAddService()">+ הוסף</button>
+      </div>
+      <div id="services-list-admin">
+        <div class="empty"><div class="empty-icon">✂️</div><div class="empty-title">אין שירותים עדיין</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== REPORTS SCREEN ===== -->
+  <div id="screen-reports" class="screen">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-header" style="margin-bottom:14px;">
+        <button onclick="showScreen('dashboard')" style="background:var(--bg);border:none;border-radius:10px;padding:8px 14px;font-family:'Heebo',sans-serif;font-size:13px;font-weight:700;cursor:pointer;color:var(--blue-mid);display:flex;align-items:center;gap:6px;">← דשבורד</button>
+        <div class="section-title">💰 דוחות כספיים</div>
+      </div>
+      <div class="filter-row" id="period-filter">
+        <button class="filter-btn active" onclick="setReportPeriod('today',this)">היום</button>
+        <button class="filter-btn" onclick="setReportPeriod('month',this)">החודש</button>
+        <button class="filter-btn" onclick="setReportPeriod('year',this)">השנה</button>
+        <button class="filter-btn" onclick="setReportPeriod('all',this)">הכל</button>
+      </div>
+      <div class="report-grid">
+        <div class="report-box"><div class="report-num" id="report-period-income">₪0</div><div class="report-label" id="report-period-label">היום</div></div>
+        <div class="report-box"><div class="report-num" id="report-total">₪0</div><div class="report-label" id="report-total-label">סה"כ הכנסות</div></div>
+      </div>
+      <div class="filter-row" id="payment-filter">
+        <button class="filter-btn active" onclick="setPaymentFilter('all',this)">הכל</button>
+        <button class="filter-btn" onclick="setPaymentFilter('cash',this)">💵 מזומן</button>
+        <button class="filter-btn" onclick="setPaymentFilter('credit',this)">💳 אשראי</button>
+      </div>
+      <div id="payments-list">
+        <div class="empty"><div class="empty-icon">💳</div><div class="empty-title">אין נתונים</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== MORE SCREEN ===== -->
+  <div id="screen-more" class="screen">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-title" style="margin-bottom:14px;">עוד</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div onclick="showScreen('customers')" style="background:white;border-radius:18px;padding:20px;text-align:center;box-shadow:0 2px 12px rgba(30,86,214,0.06);cursor:pointer;">
+          <div style="font-size:32px;margin-bottom:8px;">👥</div><div style="font-size:13px;font-weight:700;">מאגר לקוחות</div>
+        </div>
+        <div onclick="showScreen('blocked')" style="background:white;border-radius:18px;padding:20px;text-align:center;box-shadow:0 2px 12px rgba(30,86,214,0.06);cursor:pointer;">
+          <div style="font-size:32px;margin-bottom:8px;">🚫</div><div style="font-size:13px;font-weight:700;">חסימת שעות</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== CUSTOMERS SCREEN ===== -->
+  <div id="screen-customers" class="screen">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="showScreen('dashboard')">
+          <span style="font-size:18px;color:var(--blue-mid);">←</span>
+          <div class="section-title">👥 מאגר לקוחות</div>
+        </div>
+        <button class="section-action" onclick="openAddCustomerModal()">+ הוסף</button>
+      </div>
+      <div class="form-group" style="margin-bottom:14px;">
+        <input type="text" class="form-input" placeholder="🔍 חיפוש לפי שם או טלפון" oninput="filterCustomers(this.value)">
+      </div>
+      <div id="customers-count" style="font-size:12px;color:var(--gray);margin-bottom:10px;"></div>
+      <div id="customers-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== BLOCKED SCREEN ===== -->
+  <div id="screen-blocked" class="screen">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="showScreen('dashboard')">
+          <span style="font-size:18px;color:var(--blue-mid);">←</span>
+          <div class="section-title">🚫 חסימת שעות</div>
+        </div>
+        <button class="section-action" onclick="openBlockModal()">+ חסום</button>
+      </div>
+      <div id="blocked-list"></div>
+    </div>
+  </div>
+
+  <!-- ===== SETTINGS SCREEN ===== -->
+  <div id="screen-settings" class="screen">
+    <div class="section" style="padding-top:16px;">
+      <div class="section-header">
+        <div style="display:flex;align-items:center;gap:8px;cursor:pointer;" onclick="showScreen('dashboard')">
+          <span style="font-size:18px;color:var(--blue-mid);">←</span>
+          <div class="section-title">⚙️ הגדרות</div>
+        </div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">🏪 פרטי העסק</div>
+        <div class="form-group"><label class="form-label">שם העסק</label><input type="text" id="settings-name" class="form-input"></div>
+        <div class="form-group"><label class="form-label">טלפון</label><input type="tel" id="settings-phone" class="form-input" dir="ltr"></div>
+      </div>
+
+      <div class="settings-card">
+        <div class="settings-title">🕐 שעות עבודה</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:16px;">
+          <div class="form-group">
+            <label class="form-label">פתיחה</label>
+            <select id="settings-work-start" class="form-input">
+              <option>07:00</option><option>07:30</option><option>08:00</option><option>08:30</option>
+              <option selected>09:00</option><option>09:30</option><option>10:00</option><option>10:30</option><option>11:00</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">סגירה</label>
+            <select id="settings-work-end" class="form-input">
+              <option>14:00</option><option>15:00</option><option>16:00</option>
+              <option selected>17:00</option><option>18:00</option><option>19:00</option><option>20:00</option><option>21:00</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">ימי עבודה</label>
+          <div style="display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-top:8px;">
+            <div class="day-toggle selected" onclick="toggleDay(this,'sunday')">א</div>
+            <div class="day-toggle selected" onclick="toggleDay(this,'monday')">ב</div>
+            <div class="day-toggle selected" onclick="toggleDay(this,'tuesday')">ג</div>
+            <div class="day-toggle selected" onclick="toggleDay(this,'wednesday')">ד</div>
+            <div class="day-toggle selected" onclick="toggleDay(this,'thursday')">ה</div>
+            <div class="day-toggle" onclick="toggleDay(this,'friday')">ו</div>
+            <div class="day-toggle" onclick="toggleDay(this,'saturday')">ש</div>
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label class="form-label">⏸ הפסקה בין תורים</label>
+          <select id="settings-break" class="form-input">
+            <option value="0">ללא הפסקה</option><option value="5">5 דקות</option>
+            <option value="10">10 דקות</option><option value="15">15 דקות</option>
+            <option value="20">20 דקות</option><option value="30">30 דקות</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label class="form-label">🕐 שעות מיוחדות ליום ספציפי</label>
+          <div style="font-size:12px;color:var(--gray);margin-bottom:8px;">למשל: יום ו׳ שעות קצרות</div>
+          <div id="special-days-list" style="margin-bottom:8px;"></div>
+          <button type="button" onclick="addSpecialDay()" style="background:var(--bg);border:2px dashed var(--border);border-radius:10px;padding:8px 16px;font-family:'Heebo',sans-serif;font-size:13px;cursor:pointer;width:100%;color:var(--gray);">+ הוסף יום מיוחד</button>
+        </div>
+        <button class="btn btn-primary" onclick="saveSettings()">שמור שינויים</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SIDEBAR OVERLAY -->
+  <div class="sidebar-overlay" id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+  <!-- SIDEBAR -->
+  <div class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-logo">Boo<span>vik</span></div>
+      <div class="sidebar-biz" id="sidebar-biz-name">העסק שלי</div>
+    </div>
+    <div class="sidebar-nav">
+      <button class="sidebar-item active" onclick="showScreen('dashboard')" id="nav-dashboard"><span class="sidebar-item-icon">🏠</span> דשבורד</button>
+      <button class="sidebar-item" onclick="showScreen('appointments')" id="nav-appointments"><span class="sidebar-item-icon">📅</span> ניהול תורים</button>
+      <button class="sidebar-item" onclick="showScreen('services')" id="nav-services"><span class="sidebar-item-icon">✂️</span> שירותים</button>
+      <button class="sidebar-item" onclick="showScreen('reports')" id="nav-reports"><span class="sidebar-item-icon">💰</span> דוחות כספיים</button>
+      <button class="sidebar-item" onclick="showScreen('customers')" id="nav-customers"><span class="sidebar-item-icon">👥</span> מאגר לקוחות</button>
+      <button class="sidebar-item" onclick="showScreen('blocked')" id="nav-blocked"><span class="sidebar-item-icon">🚫</span> חסימת שעות</button>
+      <button class="sidebar-item" onclick="showScreen('settings')" id="nav-settings"><span class="sidebar-item-icon">⚙️</span> הגדרות</button>
+    </div>
+    <div class="sidebar-bottom">
+      <button class="sidebar-item" onclick="handleLogout()"><span class="sidebar-item-icon">🚪</span> יציאה</button>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div class="main-content">
+
+  <!-- MOBILE TOPBAR -->
+  <div class="mobile-topbar-wrap" id="mobile-topbar">
+    <div class="mobile-logo">Boo<span>vik</span></div>
+    <button class="hamburger" onclick="toggleSidebar()">☰</button>
+  </div>
+
+</div>
+
+  </div><!-- end main-content -->
+</div><!-- end app-page -->
+
+<!-- ADD SERVICE MODAL --><div class="modal-overlay" id="add-service-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title" id="add-service-title">➕ הוסף שירות</div>
+    <div class="form-group"><label class="form-label">שם השירות</label><input type="text" id="new-service-name" class="form-input" placeholder="לדוגמה: תספורת גברים"></div>
+    <div class="form-group">
+      <label class="form-label">אייקון</label>
+      <div style="display:grid;grid-template-columns:repeat(6,1fr);gap:8px;margin-top:6px;">
+        <div class="emoji-opt" onclick="selectEmoji(this,'✂️')">✂️</div><div class="emoji-opt" onclick="selectEmoji(this,'💇')">💇</div>
+        <div class="emoji-opt" onclick="selectEmoji(this,'🪒')">🪒</div><div class="emoji-opt" onclick="selectEmoji(this,'💅')">💅</div>
+        <div class="emoji-opt" onclick="selectEmoji(this,'💄')">💄</div><div class="emoji-opt" onclick="selectEmoji(this,'🧖')">🧖</div>
+        <div class="emoji-opt" onclick="selectEmoji(this,'💆')">💆</div><div class="emoji-opt" onclick="selectEmoji(this,'💪')">💪</div>
+        <div class="emoji-opt" onclick="selectEmoji(this,'🏋️')">🏋️</div><div class="emoji-opt" onclick="selectEmoji(this,'🧘')">🧘</div>
+        <div class="emoji-opt" onclick="selectEmoji(this,'🌿')">🌿</div><div class="emoji-opt" onclick="selectEmoji(this,'⭐')">⭐</div>
+      </div>
+      <input type="hidden" id="new-service-icon" value="✂️">
+    </div>
+    <div class="form-group"><label class="form-label">משך (דקות)</label><input type="number" id="new-service-duration" class="form-input" placeholder="30" dir="ltr"></div>
+    <div class="form-group"><label class="form-label">מחיר (₪)</label><input type="number" id="new-service-price" class="form-input" placeholder="80" dir="ltr"></div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-cancel" onclick="closeAddService()">ביטול</button>
+      <button class="btn-sm btn-primary" id="save-service-btn" onclick="saveService()">שמור</button>
+    </div>
+  </div>
+</div>
+
+<!-- BLOCK MODAL -->
+<div class="modal-overlay" id="block-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">🚫 חסום שעה</div>
+    <div class="form-group"><label class="form-label">תאריך</label><input type="date" id="block-date" class="form-input" dir="ltr"></div>
+    <div class="form-group">
+      <label class="form-label">משעה</label>
+      <select id="block-from" class="form-input">
+        <option>08:00</option><option>08:15</option><option>08:30</option><option>08:45</option><option>09:00</option><option>09:15</option><option>09:30</option><option>09:45</option><option>10:00</option><option>10:15</option><option>10:30</option><option>10:45</option><option>11:00</option><option>11:15</option><option>11:30</option><option>11:45</option><option>12:00</option><option>12:15</option><option>12:30</option><option>12:45</option><option>13:00</option><option>13:15</option><option>13:30</option><option>13:45</option><option>14:00</option><option>14:15</option><option>14:30</option><option>14:45</option><option>15:00</option><option>15:15</option><option>15:30</option><option>15:45</option><option>16:00</option><option>16:15</option><option>16:30</option><option>16:45</option><option>17:00</option><option>17:15</option><option>17:30</option><option>17:45</option><option>18:00</option><option>18:15</option><option>18:30</option><option>18:45</option><option>19:00</option><option>19:15</option><option>19:30</option><option>19:45</option><option>20:00</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label class="form-label">עד שעה</label>
+      <select id="block-to" class="form-input">
+        <option>08:15</option><option>08:30</option><option>08:45</option><option>09:00</option><option>09:15</option><option>09:30</option><option>09:45</option><option>10:00</option><option>10:15</option><option>10:30</option><option>10:45</option><option>11:00</option><option>11:15</option><option>11:30</option><option>11:45</option><option>12:00</option><option>12:15</option><option>12:30</option><option>12:45</option><option>13:00</option><option>13:15</option><option>13:30</option><option>13:45</option><option>14:00</option><option>14:15</option><option>14:30</option><option>14:45</option><option>15:00</option><option>15:15</option><option>15:30</option><option>15:45</option><option>16:00</option><option>16:15</option><option>16:30</option><option>16:45</option><option>17:00</option><option>17:15</option><option>17:30</option><option>17:45</option><option>18:00</option><option>18:15</option><option>18:30</option><option>18:45</option><option>19:00</option><option>19:15</option><option>19:30</option><option>19:45</option><option>20:00</option><option>20:15</option><option>20:30</option><option>20:45</option>
+      </select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-cancel" onclick="closeBlockModal()">ביטול</button>
+      <button class="btn-sm btn-primary" onclick="saveBlock()">חסום</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CUSTOMER MODAL -->
+<div class="modal-overlay" id="add-customer-modal">
+  <div class="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">👤 הוסף לקוח</div>
+    <div class="form-group"><label class="form-label">שם מלא</label><input type="text" id="new-customer-name" class="form-input" placeholder="ישראל ישראלי"></div>
+    <div class="form-group"><label class="form-label">טלפון</label><input type="tel" id="new-customer-phone" class="form-input" placeholder="050-0000000" dir="ltr"></div>
+    <div class="modal-actions">
+      <button class="btn-sm btn-cancel" onclick="closeAddCustomerModal()">ביטול</button>
+      <button class="btn-sm btn-primary" onclick="saveManualCustomer()">שמור</button>
+    </div>
+  </div>
+</div>
+
+<!-- HELP -->
+<div id="help-btn" style="display:none;">
+  <button onclick="toggleHelp()" style="width:48px;height:48px;border-radius:14px;background:rgba(30,86,214,0.1);border:2px solid rgba(30,86,214,0.2);font-size:20px;cursor:pointer;">❓</button>
+</div>
+<div id="help-panel">
+  <div style="background:linear-gradient(135deg,var(--navy),var(--blue-mid));padding:16px;color:white;display:flex;justify-content:space-between;align-items:center;">
+    <div style="font-weight:800;font-size:15px;">🚀 מדריך מהיר</div>
+    <button onclick="hideHelpForever()" style="background:rgba(255,255,255,0.2);border:none;color:white;border-radius:8px;padding:4px 10px;font-size:11px;cursor:pointer;font-family:'Heebo',sans-serif;">אל תציג שוב</button>
+  </div>
+  <div style="padding:16px;font-size:13px;line-height:1.8;">
+    <strong>📋 שלבי התחלה:</strong><br>1️⃣ הגדר שם עסק + שעות בהגדרות<br>2️⃣ הוסף שירותים<br>3️⃣ שלח לינק ללקוחות<br><br>
+    <strong>🕐 שעות חכמות:</strong><br>המערכת מציגה שעות פנויות לפי משך השירות.<br><br>
+    <strong>💬 וואטסאפ:</strong><br>הלקוח מקבל אישור אוטומטי.
+  </div>
+</div>
+
+<script>
+const SUPABASE_URL = 'https://dgzczueweiyhafmbnhgc.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImRnemN6dWV3ZWl5aGFmbWJuaGdjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODAzMzQyMjEsImV4cCI6MjA5NTkxMDIyMX0.02a2WG3XKMwGWrKCp48DlC5ZRRDYqoky9Qdz-jqXy3I';
+const { createClient } = supabase;
+const db = createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const hebrewMonths = ['ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט','ספטמבר','אוקטובר','נובמבר','דצמבר'];
+const hebrewDays = ['ראשון','שני','שלישי','רביעי','חמישי','שישי','שבת'];
+const nicheIcons = { hair:['✂️','💇','🪒'], nails:['💅','✨','💎'], beauty:['💄','🧖','💆'], fitness:['💪','🏋️','🧘'], therapy:['🧠','💬','❤️'], other:['⭐','🏪','📋'] };
+
+let currentUser = null, currentBusiness = null, selectedNiche = '';
+let dashCalMonth = new Date(), allAppointments = [], allCustomers = [];
+let currentFilter = 'today', currentPaymentFilter = 'all', currentReportPeriod = 'today';
+let specialDays = {};
+
+// ===== AUTH =====
+function showForgotPassword() {
+  document.getElementById('login-form').style.display = 'none';
+  document.getElementById('forgot-form').style.display = 'block';
+  document.getElementById('auth-error').style.display = 'none';
+}
+
+async function handleForgotPassword() {
+  const email = document.getElementById('forgot-email').value.trim();
+  if (!email) return showError('אנא הכנס אימייל');
+  const btn = document.getElementById('forgot-btn');
+  btn.disabled = true; btn.textContent = 'שולח...';
+  const { error } = await db.auth.resetPasswordForEmail(email, {
+    redirectTo: 'https://app.boovik.com/app.html'
+  });
+  if (error) {
+    showError('שגיאה: ' + error.message);
+    btn.disabled = false; btn.textContent = 'שלח קישור לאיפוס';
+    return;
+  }
+  document.getElementById('forgot-form').innerHTML = `
+    <div style="text-align:center;padding:20px 0;">
+      <div style="font-size:48px;margin-bottom:16px;">📧</div>
+      <div style="font-size:17px;font-weight:800;color:var(--text);margin-bottom:10px;">נשלח!</div>
+      <div style="font-size:14px;color:var(--gray);line-height:1.7;">בדוק את תיבת המייל שלך.<br>לחץ על הקישור לאיפוס הסיסמא.</div>
+      <button onclick="switchTab('login')" style="margin-top:20px;background:var(--bg);border:none;border-radius:12px;padding:12px 24px;font-family:'Heebo',sans-serif;font-size:14px;font-weight:700;cursor:pointer;color:var(--blue-mid);">← חזור להתחברות</button>
+    </div>`;
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.auth-tab').forEach((t,i) => t.classList.toggle('active',(i===0&&tab==='login')||(i===1&&tab==='register')));
+  document.getElementById('login-form').style.display = tab==='login'?'block':'none';
+  document.getElementById('register-form').style.display = tab==='register'?'block':'none';
+  document.getElementById('forgot-form').style.display = 'none';
+  document.getElementById('auth-error').style.display = 'none';
+}
+function selectNiche(el, niche) {
+  document.querySelectorAll('.niche-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected'); selectedNiche = niche;
+  document.getElementById('reg-niche').value = niche;
+}
+function showError(msg) { const el=document.getElementById('auth-error'); el.textContent=msg; el.style.display='block'; }
+
+async function handleLogin() {
+  const email=document.getElementById('login-email').value, password=document.getElementById('login-password').value;
+  if(!email||!password) return showError('אנא מלא אימייל וסיסמא');
+  const btn=document.getElementById('login-btn'); btn.disabled=true; btn.textContent='מתחבר...';
+  const {data,error}=await db.auth.signInWithPassword({email,password});
+  if(error){showError('אימייל או סיסמא שגויים');btn.disabled=false;btn.textContent='כניסה למערכת';return;}
+  currentUser=data.user; loadApp();
+}
+async function handleRegister() {
+  const bizName=document.getElementById('reg-bizname').value, phone=document.getElementById('reg-phone').value;
+  const email=document.getElementById('reg-email').value, password=document.getElementById('reg-password').value;
+  const niche=document.getElementById('reg-niche').value;
+  if(!bizName||!email||!password) return showError('אנא מלא את כל השדות');
+  if(password.length<6) return showError('הסיסמא חייבת להיות לפחות 6 תווים');
+  const btn=document.getElementById('register-btn'); btn.disabled=true; btn.textContent='יוצר חשבון...';
+  const {data,error}=await db.auth.signUp({email,password});
+  if(error){showError('שגיאה: '+error.message);btn.disabled=false;btn.textContent='✅ צור חשבון חינם';return;}
+  currentUser=data.user;
+  const slug=bizName.toLowerCase().replace(/\s+/g,'-').replace(/[^a-z0-9-]/g,'').replace(/^-+/,'')+'-'+Math.random().toString(36).substr(2,4);
+  const {data:biz,error:bizError}=await db.from('businesses').insert({name:bizName,phone,email,slug,owner_id:currentUser.id,niche}).select().single();
+  if(bizError){showError('שגיאה ביצירת עסק: '+bizError.message);return;}
+  currentBusiness=biz; loadApp();
+}
+async function handleLogout() { await db.auth.signOut(); currentUser=null; currentBusiness=null; showPage('auth-page'); }
+
+// ===== APP =====
+async function loadApp() {
+  const {data:biz}=await db.from('businesses').select('*').eq('owner_id',currentUser.id).maybeSingle();
+  currentBusiness=biz;
+  if(currentBusiness?.is_blocked){showPage('auth-page');showError('החשבון שלך הושעה.');return;}
+  if(currentBusiness){
+    document.getElementById('header-biz-name').textContent=currentBusiness.name||'העסק שלי';
+    document.getElementById('sidebar-biz-name').textContent=currentBusiness.name||'העסק שלי';
+    document.getElementById('booking-link').textContent=`boovik.com/book/${currentBusiness.slug}`;
+    document.getElementById('settings-name').value=currentBusiness.name||'';
+    document.getElementById('settings-phone').value=currentBusiness.phone||'';
+    loadWorkingHours();
+  }
+  const today=new Date();
+  document.getElementById('header-date').textContent=`יום ${hebrewDays[today.getDay()]}, ${today.getDate()}/${today.getMonth()+1}/${today.getFullYear()}`;
+  showPage('app-page');
+  if(currentBusiness) loadDashboard();
+  if(localStorage.getItem('boovik-help-hidden')) document.getElementById('help-btn').style.display='none';
+  else document.getElementById('help-btn').style.display='block';
+}
+
+async function loadDashboard() {
+  if(!currentBusiness) return;
+  const today=new Date().toISOString().split('T')[0];
+  const weekStart=new Date(); weekStart.setDate(weekStart.getDate()-weekStart.getDay());
+  const monthStart=new Date(); monthStart.setDate(1);
+
+  const {data:all}=await db.from('appointments').select('*,services(name,price,duration,icon)').eq('business_id',currentBusiness.id).order('date').order('time');
+  if(!all) return;
+  allAppointments=all;
+
+  const todayAppts=all.filter(a=>a.date===today&&a.status!=='cancelled'&&a.status!=='blocked');
+  const weekAppts=all.filter(a=>a.date>=weekStart.toISOString().split('T')[0]&&a.status!=='cancelled');
+  const monthIncome=all.filter(a=>a.date>=monthStart.toISOString().split('T')[0]&&a.status!=='cancelled').reduce((s,a)=>s+(a.services?.price||0),0);
+
+  document.getElementById('stat-today').textContent=todayAppts.length;
+  document.getElementById('stat-week').textContent=weekAppts.length;
+  document.getElementById('stat-income').textContent=`₪${monthIncome}`;
+
+  renderTodayAppts(todayAppts);
+  renderDashCalendar(all);
+
+  const {data:services}=await db.from('services').select('*').eq('business_id',currentBusiness.id);
+  loadServicesAdmin(services);
+
+  const totalIncome=all.filter(a=>a.status!=='cancelled').reduce((s,a)=>s+(a.services?.price||0),0);
+  document.getElementById('report-total').textContent=`₪${totalIncome}`;
+  refreshReports();
+  loadBlockedSlots();
+  filterAppts(currentFilter);
+}
+
+// ===== SCREENS =====
+function showScreen(name) {
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.sidebar-item').forEach(t=>t.classList.remove('active'));
+  document.getElementById('screen-'+name)?.classList.add('active');
+  document.getElementById('nav-'+name)?.classList.add('active');
+  if(name==='dashboard') loadDashboard();
+  if(name==='customers') loadCustomers();
+  if(name==='blocked') loadBlockedSlots();
+  if(name==='reports') refreshReports();
+  closeDayPopup();
+  closeSidebar();
+}
+
+// ===== TODAY APPOINTMENTS =====
+function renderTodayAppts(appts) {
+  const el=document.getElementById('today-appts-list');
+  const visible=appts.filter(a=>a.status!=='cancelled'&&a.status!=='blocked');
+  if(visible.length===0){
+    el.innerHTML='<div class="empty"><div class="empty-icon">📭</div><div class="empty-title">אין תורים היום</div><div class="empty-sub">שלח את הלינק ללקוחות!</div></div>';
+    return;
+  }
+  el.innerHTML=visible.map(a=>renderApptCard(a)).join('');
+}
+
+function renderApptCard(a) {
+  const niche=currentBusiness?.niche||'other';
+  const icon=nicheIcons[niche]?.[0]||'⭐';
+  const statusMap={booked:'s-booked',confirmed:'s-confirmed',done:'s-done',cancelled:'s-cancelled'};
+  const statusLabel={booked:'הוזמן 🔵',confirmed:'מאושר ✅',done:'הסתיים',cancelled:'בוטל'};
+  const phoneDigits=(a.customer_phone||'').replace(/\D/g,'');
+  const intlPhone=phoneDigits.startsWith('0')?'972'+phoneDigits.slice(1):phoneDigits;
+
+  return `<div class="appt-card">
+    <div class="appt-time-pill">
+      <div class="appt-time-main">${a.time?.slice(0,5)||'--:--'}</div>
+      <div class="appt-time-date">${formatDate(a.date)}</div>
+    </div>
+    <div class="appt-body">
+      <div class="appt-name">${a.customer_name}</div>
+      <div class="appt-service">${a.services?.icon||icon} ${a.services?.name||''} · 📞 ${a.customer_phone||''}</div>
+      ${a.status!=='cancelled'&&a.status!=='done'?`<div class="appt-actions">
+        ${a.status==='booked'?`<button class="appt-action-btn btn-confirm" onclick="updateApptStatus('${a.id}','confirmed')">✅ אשר</button>`:''}
+        ${a.status==='confirmed'?`<button class="appt-action-btn btn-done" onclick="updateApptStatus('${a.id}','done')">☑️ הסתיים</button>`:''}
+        <button class="appt-action-btn btn-cancel" onclick="updateApptStatus('${a.id}','cancelled')">❌ בטל</button>
+        <a href="https://wa.me/${intlPhone}" target="_blank" class="appt-action-btn btn-wa">💬</a>
+      </div>`:''}
+    </div>
+    <div class="appt-right">
+      <span class="status-pill ${statusMap[a.status]||'s-booked'}">${statusLabel[a.status]||a.status}</span>
+      <div class="appt-price">₪${a.services?.price||0}</div>
+    </div>
+  </div>`;
+}
+
+// ===== FILTER APPOINTMENTS =====
+function filterAppts(filter, btn) {
+  currentFilter=filter;
+  document.querySelectorAll('#appts-filter-row .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const today=new Date().toISOString().split('T')[0];
+  const tomorrow=new Date(); tomorrow.setDate(tomorrow.getDate()+1); const tomorrowStr=tomorrow.toISOString().split('T')[0];
+  const weekEnd=new Date(); weekEnd.setDate(weekEnd.getDate()+(6-weekEnd.getDay())); const weekEndStr=weekEnd.toISOString().split('T')[0];
+  const el=document.getElementById('all-appointments-list');
+
+  if(filter==='all'){
+    el.innerHTML=`<div style="margin-bottom:14px;">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+        <button class="cal-nav-btn" onclick="changeApptMonth(-1)">›</button>
+        <div class="cal-month-label" id="appt-cal-month"></div>
+        <button class="cal-nav-btn" onclick="changeApptMonth(1)">‹</button>
+      </div>
+      <div class="cal-grid" id="appt-cal-grid">
+        <div class="cal-day-name">א</div><div class="cal-day-name">ב</div><div class="cal-day-name">ג</div>
+        <div class="cal-day-name">ד</div><div class="cal-day-name">ה</div><div class="cal-day-name">ו</div>
+        <div class="cal-day-name">ש</div>
+      </div></div>
+      <div id="appt-day-detail"></div>`;
+    renderApptCalendar();
+    return;
+  }
+
+  let filtered=allAppointments.filter(a=>a.status!=='blocked');
+  if(filter==='today') filtered=filtered.filter(a=>a.date===today);
+  else if(filter==='tomorrow') filtered=filtered.filter(a=>a.date===tomorrowStr);
+  else if(filter==='week') filtered=filtered.filter(a=>a.date>=today&&a.date<=weekEndStr);
+
+  if(filtered.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">אין תורים</div></div>';return;}
+
+  if(filter==='week'){
+    const byDate={};
+    filtered.forEach(a=>{if(!byDate[a.date])byDate[a.date]=[];byDate[a.date].push(a);});
+    el.innerHTML=Object.keys(byDate).sort().map(date=>`
+      <div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:800;color:var(--blue-mid);padding:8px 0;border-bottom:2px solid var(--border);margin-bottom:8px;">📅 ${formatDateFull(date)}</div>
+        ${byDate[date].map(a=>renderApptCard(a)).join('')}
+      </div>`).join('');
+  } else {
+    el.innerHTML=filtered.map(a=>renderApptCard(a)).join('');
+  }
+}
+
+let apptCalMonth=new Date();
+function renderApptCalendar(){
+  const grid=document.getElementById('appt-cal-grid'); const label=document.getElementById('appt-cal-month');
+  if(!grid||!label) return;
+  label.textContent=`${hebrewMonths[apptCalMonth.getMonth()]} ${apptCalMonth.getFullYear()}`;
+  document.querySelectorAll('#appt-cal-grid .cal-day').forEach(d=>d.remove());
+  const year=apptCalMonth.getFullYear(), month=apptCalMonth.getMonth();
+  const firstDay=new Date(year,month,1).getDay(), daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date();
+  const apptDays={};
+  allAppointments.forEach(a=>{if(a.date)apptDays[a.date]=(apptDays[a.date]||0)+1;});
+  for(let i=firstDay-1;i>=0;i--){const d=document.createElement('div');d.className='cal-day other';d.textContent=new Date(year,month,0).getDate()-i;grid.appendChild(d);}
+  for(let day=1;day<=daysInMonth;day++){
+    const d=document.createElement('div'); d.className='cal-day';
+    d.textContent=day;
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    if(day===today.getDate()&&month===today.getMonth()&&year===today.getFullYear())d.classList.add('today');
+    if(apptDays[dateStr])d.classList.add('has-dot');
+    d.onclick=()=>showApptDay(d,dateStr);
+    grid.appendChild(d);
+  }
+}
+function showApptDay(el,dateStr){
+  document.querySelectorAll('#appt-cal-grid .cal-day').forEach(d=>d.classList.remove('selected'));
+  el.classList.add('selected');
+  const dayAppts=allAppointments.filter(a=>a.date===dateStr&&a.status!=='blocked');
+  const detail=document.getElementById('appt-day-detail');
+  if(dayAppts.length===0){detail.innerHTML=`<div class="empty"><div class="empty-icon">📅</div><div class="empty-title">אין תורים ב-${formatDateFull(dateStr)}</div></div>`;return;}
+  detail.innerHTML=`<div style="font-size:13px;font-weight:800;color:var(--text);padding:10px 0;">${formatDateFull(dateStr)} — ${dayAppts.length} תורים</div>${dayAppts.map(a=>renderApptCard(a)).join('')}`;
+}
+function changeApptMonth(dir){apptCalMonth.setMonth(apptCalMonth.getMonth()+dir);renderApptCalendar();}
+
+// ===== DASHBOARD CALENDAR =====
+function renderDashCalendar(allAppts){
+  const grid=document.getElementById('dash-cal-grid'); const label=document.getElementById('dash-cal-month');
+  label.textContent=`${hebrewMonths[dashCalMonth.getMonth()]} ${dashCalMonth.getFullYear()}`;
+  document.querySelectorAll('#dash-cal-grid .cal-day').forEach(d=>d.remove());
+  const year=dashCalMonth.getFullYear(), month=dashCalMonth.getMonth();
+  const firstDay=new Date(year,month,1).getDay(), daysInMonth=new Date(year,month+1,0).getDate();
+  const today=new Date();
+  const apptDays={};
+  allAppts.forEach(a=>{if(a.date&&a.status!=='cancelled'&&a.status!=='blocked')apptDays[a.date]=(apptDays[a.date]||0)+1;});
+  const prevDays=new Date(year,month,0).getDate();
+  for(let i=firstDay-1;i>=0;i--){const d=document.createElement('div');d.className='cal-day other';d.textContent=prevDays-i;grid.appendChild(d);}
+  for(let day=1;day<=daysInMonth;day++){
+    const d=document.createElement('div'); d.className='cal-day'; d.textContent=day;
+    const dateStr=`${year}-${String(month+1).padStart(2,'0')}-${String(day).padStart(2,'0')}`;
+    if(day===today.getDate()&&month===today.getMonth()&&year===today.getFullYear())d.classList.add('today');
+    if(apptDays[dateStr])d.classList.add('has-dot');
+    d.onclick=()=>showDayPopup(d,dateStr,allAppts);
+    grid.appendChild(d);
+  }
+}
+function changeDashMonth(dir){dashCalMonth.setMonth(dashCalMonth.getMonth()+dir);renderDashCalendar(allAppointments);}
+
+function showDayPopup(el,dateStr,allAppts){
+  document.querySelectorAll('#dash-cal-grid .cal-day').forEach(d=>d.classList.remove('selected'));
+  el.classList.add('selected');
+  const dayAppts=(allAppts||allAppointments).filter(a=>a.date===dateStr&&a.status!=='cancelled'&&a.status!=='blocked');
+  document.getElementById('popup-day-title').textContent=`${formatDateFull(dateStr)} (${dayAppts.length} תורים)`;
+  document.getElementById('popup-enter-btn').onclick=()=>{
+    currentFilter='all'; showScreen('appointments');
+    setTimeout(()=>{renderApptCalendar();},100);
+  };
+  const list=document.getElementById('popup-appts-list');
+  if(dayAppts.length===0){
+    list.innerHTML='<p style="text-align:center;padding:16px;color:var(--gray);font-size:13px;">אין תורים ביום זה</p>';
+  } else {
+    list.innerHTML=dayAppts.map(a=>`
+      <div class="popup-appt">
+        <div class="popup-time">${a.time?.slice(0,5)}</div>
+        <div class="popup-info">
+          <div class="popup-name">${a.customer_name}</div>
+          <div class="popup-svc">${a.services?.name||''} · ₪${a.services?.price||0}</div>
+        </div>
+        <span class="status-pill ${a.status==='confirmed'?'s-confirmed':a.status==='done'?'s-done':'s-booked'}" style="font-size:9px;">${a.status==='confirmed'?'✅':a.status==='done'?'הסתיים':'🔵'}</span>
+      </div>`).join('');
+  }
+  document.getElementById('day-popup').classList.add('show');
+}
+function closeDayPopup(){document.getElementById('day-popup').classList.remove('show');}
+
+// ===== UPDATE STATUS =====
+async function updateApptStatus(id,status){
+  if(status==='cancelled'){
+    const appt=allAppointments.find(a=>a.id===id);
+    if(appt?.customer_phone){
+      const dateDisplay=appt.date?appt.date.split('-').reverse().join('/'):'';
+      const msg=`שלום ${appt.customer_name} 😔\n\nמצטערים, *${currentBusiness.name}* לא יכול לקבל את התור שלך.\n\n📅 תאריך: ${dateDisplay}\n🕐 שעה: ${appt.time?.slice(0,5)}\n\nאנא צור קשר עם העסק לקביעת תור חדש.\n\nתודה על ההבנה 🙏`;
+      sendWhatsAppFromApp(appt.customer_phone,msg);
+    }
+  }
+  const {error}=await db.from('appointments').update({status}).eq('id',id);
+  if(error){showToast('שגיאה בעדכון','error');return;}
+  showToast(status==='cancelled'?'בוטל 💬':'עודכן ✅');
+  loadDashboard();
+}
+
+async function sendWhatsAppFromApp(phone,message){
+  let intlPhone=phone.replace(/\D/g,'');
+  if(intlPhone.startsWith('0'))intlPhone='972'+intlPhone.slice(1);
+  if(!intlPhone.startsWith('972'))intlPhone='972'+intlPhone;
+  try{await fetch('https://gate.whapi.cloud/messages/text',{method:'POST',headers:{'Content-Type':'application/json','Authorization':'Bearer lfxLFgP9R8eC4sAjimBUPHIe6BViwdS5'},body:JSON.stringify({to:intlPhone,body:message})});}catch(e){}
+}
+
+// ===== SERVICES =====
+function loadServicesAdmin(services){
+  const el=document.getElementById('services-list-admin');
+  const niche=currentBusiness?.niche||'other';
+  const icons=nicheIcons[niche]||nicheIcons.other;
+  if(!services||services.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">✂️</div><div class="empty-title">אין שירותים עדיין</div><div class="empty-sub">לחץ + הוסף</div></div>';return;}
+  el.innerHTML=services.map((s,i)=>`
+    <div class="service-card">
+      <div class="svc-icon">${s.icon||icons[i%icons.length]}</div>
+      <div class="svc-info"><div class="svc-name">${s.name}</div><div class="svc-meta">⏱ ${s.duration} דקות</div></div>
+      <div class="svc-price">₪${s.price}</div>
+      <div class="svc-btns">
+        <button class="svc-btn" style="background:#eff6ff;color:var(--blue-mid);" onclick="editService('${s.id}','${s.name}',${s.duration},${s.price},'${s.icon||''}')">✏️</button>
+        <button class="svc-btn" style="background:#fef2f2;color:#dc2626;" onclick="deleteService('${s.id}')">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+async function deleteService(id){
+  if(!confirm('למחוק את השירות?'))return;
+  const {error}=await db.from('services').delete().eq('id',id).eq('business_id',currentBusiness.id);
+  if(error){showToast('שגיאה: '+error.message,'error');return;}
+  showToast('השירות נמחק ✅'); loadDashboard();
+}
+function editService(id,name,duration,price,icon){
+  document.getElementById('new-service-name').value=name;
+  document.getElementById('new-service-duration').value=duration;
+  document.getElementById('new-service-price').value=price;
+  document.getElementById('new-service-icon').value=icon||'✂️';
+  document.querySelectorAll('.emoji-opt').forEach(o=>o.classList.toggle('selected',o.textContent===(icon||'✂️')));
+  document.getElementById('add-service-title').textContent='✏️ עריכת שירות';
+  document.getElementById('save-service-btn').onclick=()=>updateService(id);
+  openAddService();
+}
+async function updateService(id){
+  const name=document.getElementById('new-service-name').value;
+  const duration=parseInt(document.getElementById('new-service-duration').value);
+  const price=parseInt(document.getElementById('new-service-price').value);
+  const icon=document.getElementById('new-service-icon').value||'✂️';
+  if(!name||!duration||!price)return showToast('אנא מלא את כל השדות','error');
+  await db.from('services').update({name,duration,price,icon}).eq('id',id);
+  document.getElementById('add-service-title').textContent='➕ הוסף שירות';
+  document.getElementById('save-service-btn').onclick=saveService;
+  closeAddService(); showToast('השירות עודכן ✅'); loadDashboard();
+}
+function openAddService(){document.getElementById('add-service-modal').classList.add('show');}
+function closeAddService(){document.getElementById('add-service-modal').classList.remove('show');}
+function selectEmoji(el,emoji){document.querySelectorAll('.emoji-opt').forEach(o=>o.classList.remove('selected'));el.classList.add('selected');document.getElementById('new-service-icon').value=emoji;}
+async function saveService(){
+  const name=document.getElementById('new-service-name').value;
+  const duration=parseInt(document.getElementById('new-service-duration').value);
+  const price=parseInt(document.getElementById('new-service-price').value);
+  const icon=document.getElementById('new-service-icon').value||'✂️';
+  if(!name||!duration||!price)return showToast('אנא מלא את כל השדות','error');
+  const {error}=await db.from('services').insert({business_id:currentBusiness.id,name,duration,price,icon}).select();
+  if(error){showToast('שגיאה: '+error.message,'error');return;}
+  closeAddService();
+  document.getElementById('new-service-name').value='';
+  document.getElementById('new-service-duration').value='';
+  document.getElementById('new-service-price').value='';
+  loadDashboard();
+}
+
+// ===== REPORTS =====
+function setReportPeriod(period,btn){
+  currentReportPeriod=period;
+  document.querySelectorAll('#period-filter .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  refreshReports();
+}
+function setPaymentFilter(filter,btn){
+  currentPaymentFilter=filter;
+  document.querySelectorAll('#payment-filter .filter-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  refreshReports();
+}
+function refreshReports(){
+  const today=new Date().toISOString().split('T')[0];
+  const monthStart=new Date(); monthStart.setDate(1);
+  const yearStart=new Date(); yearStart.setMonth(0); yearStart.setDate(1);
+  let filtered=allAppointments.filter(a=>a.status!=='cancelled');
+  if(currentReportPeriod==='today')filtered=filtered.filter(a=>a.date===today);
+  else if(currentReportPeriod==='month')filtered=filtered.filter(a=>a.date>=monthStart.toISOString().split('T')[0]);
+  else if(currentReportPeriod==='year')filtered=filtered.filter(a=>a.date>=yearStart.toISOString().split('T')[0]);
+  const income=filtered.reduce((s,a)=>s+(a.services?.price||0),0);
+  const labels={today:'היום',month:'החודש',year:'השנה',all:'סה"כ'};
+  document.getElementById('report-period-income').textContent=`₪${income}`;
+  document.getElementById('report-period-label').textContent=labels[currentReportPeriod];
+  const allNC=allAppointments.filter(a=>a.status!=='cancelled');
+  const totalAll=allNC.reduce((s,a)=>s+(a.services?.price||0),0);
+  const totalCash=allNC.filter(a=>a.paid_cash).reduce((s,a)=>s+(a.services?.price||0),0);
+  const totalCredit=allNC.filter(a=>a.paid_credit).reduce((s,a)=>s+(a.services?.price||0),0);
+  const totalEl=document.getElementById('report-total');
+  const totalLabelEl=document.getElementById('report-total-label');
+  if(currentPaymentFilter==='cash'){totalEl.textContent=`₪${totalCash}`;if(totalLabelEl)totalLabelEl.textContent='סה"כ מזומן';}
+  else if(currentPaymentFilter==='credit'){totalEl.textContent=`₪${totalCredit}`;if(totalLabelEl)totalLabelEl.textContent='סה"כ אשראי';}
+  else{totalEl.textContent=`₪${totalAll}`;if(totalLabelEl)totalLabelEl.textContent='סה"כ הכנסות';}
+  let payFiltered=[...filtered];
+  if(currentPaymentFilter==='cash')payFiltered=payFiltered.filter(a=>a.paid_cash===true);
+  else if(currentPaymentFilter==='credit')payFiltered=payFiltered.filter(a=>a.paid_credit===true);
+  renderPaymentsList(payFiltered);
+}
+function renderPaymentsList(appts){
+  const el=document.getElementById('payments-list');
+  const recent=[...appts].reverse().slice(0,20);
+  if(recent.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">💳</div><div class="empty-title">אין נתונים</div></div>';return;}
+  el.innerHTML=recent.map(a=>`
+    <div class="appt-card" style="margin-bottom:8px;">
+      <div class="appt-time-pill"><div class="appt-time-main">${a.time?.slice(0,5)}</div><div class="appt-time-date">${formatDate(a.date)}</div></div>
+      <div class="appt-body"><div class="appt-name">${a.customer_name}</div><div class="appt-service">${a.services?.name||''}</div></div>
+      <div class="appt-right">
+        <div class="appt-price">₪${a.services?.price||0}</div>
+        <div style="display:flex;gap:4px;">
+          <button style="border:none;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;background:${a.paid_cash?'#d1fae5':'#f4f8ff'};color:${a.paid_cash?'#059669':'#64748b'};" onclick="toggleCash('${a.id}',this)">💵${a.paid_cash?' ✅':''}</button>
+          <button style="border:none;border-radius:7px;padding:4px 8px;font-size:11px;font-weight:700;cursor:pointer;background:${a.paid_credit?'#d1fae5':'#eff6ff'};color:${a.paid_credit?'#059669':'#1e56d6'};" onclick="toggleCredit('${a.id}',this)">💳${a.paid_credit?' ✅':''}</button>
+        </div>
+      </div>
+    </div>`).join('');
+}
+async function toggleCash(id,btn){
+  const newVal=!btn.style.background.includes('d1fae5');
+  await db.from('appointments').update({paid_cash:newVal,paid_credit:false}).eq('id',id);
+  const appt=allAppointments.find(a=>a.id===id);
+  if(appt){appt.paid_cash=newVal;appt.paid_credit=false;}
+  refreshReports();
+}
+async function toggleCredit(id,btn){
+  const newVal=!btn.style.background.includes('d1fae5');
+  await db.from('appointments').update({paid_credit:newVal,paid_cash:false}).eq('id',id);
+  const appt=allAppointments.find(a=>a.id===id);
+  if(appt){appt.paid_credit=newVal;appt.paid_cash=false;}
+  refreshReports();
+}
+
+// ===== CUSTOMERS =====
+async function loadCustomers(){
+  const {data:appts}=await db.from('appointments').select('customer_name,customer_phone').eq('business_id',currentBusiness.id).neq('status','blocked');
+  const {data:blocked}=await db.from('blocked_customers').select('phone').eq('business_id',currentBusiness.id);
+  const blockedPhones=new Set((blocked||[]).map(b=>b.phone));
+  if(!appts)return;
+  const seen=new Set(); allCustomers=[];
+  appts.forEach(a=>{if(a.customer_phone&&!seen.has(a.customer_phone)&&!blockedPhones.has(a.customer_phone)){seen.add(a.customer_phone);allCustomers.push({name:a.customer_name,phone:a.customer_phone});}});
+  document.getElementById('customers-count').textContent=`${allCustomers.length} לקוחות`;
+  renderCustomers(allCustomers);
+}
+function renderCustomers(customers){
+  const el=document.getElementById('customers-list');
+  if(customers.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">👥</div><div class="empty-title">אין לקוחות</div></div>';return;}
+  el.innerHTML=customers.map((c,i)=>`
+    <div class="customer-card">
+      <div class="customer-avatar">👤</div>
+      <div class="customer-info"><div class="customer-name">${c.name}</div><div class="customer-phone">${c.phone}</div></div>
+      <div class="customer-btns">
+        <a href="https://wa.me/972${c.phone.replace(/\D/g,'').replace(/^0/,'')}" target="_blank" class="cust-btn" style="background:#dcf8c6;color:#128c7e;text-decoration:none;">💬</a>
+        <button class="cust-btn" style="background:#fef2f2;color:#dc2626;" onclick="removeCustomer(${i})">🗑️</button>
+      </div>
+    </div>`).join('');
+}
+function filterCustomers(query){renderCustomers(allCustomers.filter(c=>c.name.includes(query)||c.phone.includes(query)));}
+function openAddCustomerModal(){document.getElementById('add-customer-modal').classList.add('show');}
+function closeAddCustomerModal(){document.getElementById('add-customer-modal').classList.remove('show');}
+async function saveManualCustomer(){
+  const name=document.getElementById('new-customer-name').value.trim();
+  const phone=document.getElementById('new-customer-phone').value.trim();
+  if(!name||!phone)return showToast('אנא מלא שם וטלפון','error');
+  if(allCustomers.find(c=>c.phone===phone))return showToast('הלקוח כבר קיים','error');
+  allCustomers.push({name,phone});
+  document.getElementById('customers-count').textContent=`${allCustomers.length} לקוחות`;
+  renderCustomers(allCustomers);
+  closeAddCustomerModal();
+  document.getElementById('new-customer-name').value='';
+  document.getElementById('new-customer-phone').value='';
+  showToast('הלקוח נוסף ✅');
+}
+async function removeCustomer(index){
+  if(!confirm('להסיר לקוח זה?'))return;
+  const customer=allCustomers[index];
+  await db.from('blocked_customers').insert({business_id:currentBusiness.id,phone:customer.phone});
+  allCustomers.splice(index,1);
+  document.getElementById('customers-count').textContent=`${allCustomers.length} לקוחות`;
+  renderCustomers(allCustomers);
+  showToast('הלקוח הוסר ✅');
+}
+
+// ===== BLOCKED =====
+async function loadBlockedSlots(){
+  const {data:blocked}=await db.from('appointments').select('*').eq('business_id',currentBusiness.id).eq('status','blocked').order('date').order('time');
+  const el=document.getElementById('blocked-list');
+  if(!blocked||blocked.length===0){el.innerHTML='<div class="empty"><div class="empty-icon">✅</div><div class="empty-title">אין שעות חסומות</div></div>';return;}
+  el.innerHTML=blocked.map(b=>`
+    <div class="blocked-item">
+      <div>
+        <div class="blocked-time">🚫 ${b.time?.slice(0,5)}</div>
+        <div class="blocked-date">${formatDate(b.date)}</div>
+      </div>
+      <button onclick="removeBlock('${b.id}')" style="margin-right:auto;background:#fef2f2;color:#dc2626;border:none;border-radius:8px;padding:6px 12px;font-family:'Heebo',sans-serif;font-size:12px;font-weight:700;cursor:pointer;">הסר חסימה</button>
+    </div>`).join('');
+}
+function openBlockModal(){document.getElementById('block-modal').classList.add('show');}
+function closeBlockModal(){document.getElementById('block-modal').classList.remove('show');}
+async function saveBlock(){
+  const date=document.getElementById('block-date').value;
+  const from=document.getElementById('block-from').value, to=document.getElementById('block-to').value;
+  if(!date)return showToast('אנא בחר תאריך','error');
+  const slots=[]; let current=from;
+  while(current<to){
+    slots.push(current);
+    const [h,m]=current.split(':').map(Number);
+    const totalMins=h*60+m+15; const nh=Math.floor(totalMins/60); const nm=totalMins%60;
+    current=`${String(nh).padStart(2,'0')}:${String(nm).padStart(2,'0')}`;
+  }
+  for(const slot of slots){
+    await db.from('appointments').insert({business_id:currentBusiness.id,service_id:null,customer_name:'חסום',customer_phone:'',date,time:slot+':00',status:'blocked'});
+  }
+  closeBlockModal(); loadBlockedSlots(); showToast('שעה חסומה ✅');
+}
+async function removeBlock(id){
+  const {error}=await db.from('appointments').delete().eq('id',id).eq('business_id',currentBusiness.id);
+  if(error){showToast('שגיאה','error');return;}
+  showToast('החסימה הוסרה ✅'); loadBlockedSlots();
+}
+
+// ===== SETTINGS =====
+function renderSpecialDays(){
+  const container=document.getElementById('special-days-list'); if(!container)return;
+  const dayNames={sunday:'ראשון',monday:'שני',tuesday:'שלישי',wednesday:'רביעי',thursday:'חמישי',friday:'שישי',saturday:'שבת'};
+  container.innerHTML=Object.entries(specialDays).map(([day,hours])=>`
+    <div style="display:flex;align-items:center;gap:8px;background:var(--bg);border-radius:10px;padding:8px 12px;margin-bottom:6px;">
+      <span style="font-weight:700;font-size:13px;flex:1;">יום ${dayNames[day]}: ${hours.start}–${hours.end}</span>
+      <button onclick="removeSpecialDay('${day}')" style="background:none;border:none;color:var(--danger);cursor:pointer;font-size:16px;">✕</button>
+    </div>`).join('');
+}
+function addSpecialDay(){
+  const days=[{value:'sunday',label:'ראשון'},{value:'monday',label:'שני'},{value:'tuesday',label:'שלישי'},{value:'wednesday',label:'רביעי'},{value:'thursday',label:'חמישי'},{value:'friday',label:'שישי'},{value:'saturday',label:'שבת'}];
+  const container=document.getElementById('special-days-list');
+  container.insertAdjacentHTML('beforeend',`
+    <div id="new-special-day" style="background:var(--bg);border-radius:10px;padding:12px;margin-bottom:8px;">
+      <select id="special-day-name" class="form-input" style="margin-bottom:8px;">${days.map(d=>`<option value="${d.value}">יום ${d.label}</option>`).join('')}</select>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;">
+        <select id="special-start" class="form-input">${['07:00','07:30','08:00','08:30','09:00','09:30','10:00'].map(t=>`<option>${t}</option>`).join('')}</select>
+        <select id="special-end" class="form-input">${['12:00','13:00','14:00','15:00','16:00','17:00','18:00'].map(t=>`<option>${t}</option>`).join('')}</select>
+      </div>
+      <div style="display:flex;gap:8px;">
+        <button onclick="saveSpecialDay()" class="btn-sm btn-primary" style="flex:1;padding:10px;">שמור</button>
+        <button onclick="document.getElementById('new-special-day').remove()" class="btn-sm btn-cancel" style="flex:1;padding:10px;">ביטול</button>
+      </div>
+    </div>`);
+}
+function saveSpecialDay(){
+  const day=document.getElementById('special-day-name').value;
+  const start=document.getElementById('special-start').value, end=document.getElementById('special-end').value;
+  specialDays[day]={start,end}; document.getElementById('new-special-day')?.remove(); renderSpecialDays();
+}
+function removeSpecialDay(day){delete specialDays[day];renderSpecialDays();}
+function toggleDay(el){el.classList.toggle('selected');}
+function loadWorkingHours(){
+  if(!currentBusiness)return;
+  const start=currentBusiness.work_start||'09:00', end=currentBusiness.work_end||'17:00';
+  const days=currentBusiness.work_days||['sunday','monday','tuesday','wednesday','thursday'];
+  const breakVal=currentBusiness.break_between||0;
+  specialDays=currentBusiness.special_hours||{};
+  const startEl=document.getElementById('settings-work-start'); const endEl=document.getElementById('settings-work-end'); const breakEl=document.getElementById('settings-break');
+  if(startEl)startEl.value=start; if(endEl)endEl.value=end; if(breakEl)breakEl.value=breakVal;
+  const allDays=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  document.querySelectorAll('.day-toggle').forEach((el,i)=>{if(allDays[i])el.classList.toggle('selected',days.includes(allDays[i]));});
+  renderSpecialDays();
+}
+async function saveSettings(){
+  const name=document.getElementById('settings-name').value;
+  const phone=document.getElementById('settings-phone').value;
+  const workStart=document.getElementById('settings-work-start')?.value||'09:00';
+  const workEnd=document.getElementById('settings-work-end')?.value||'17:00';
+  const breakBetween=parseInt(document.getElementById('settings-break')?.value||'0');
+  const dayNames=['sunday','monday','tuesday','wednesday','thursday','friday','saturday'];
+  const workDays=[]; document.querySelectorAll('.day-toggle').forEach((el,i)=>{if(el.classList.contains('selected'))workDays.push(dayNames[i]);});
+  await db.from('businesses').update({name,phone,work_start:workStart,work_end:workEnd,work_days:workDays,break_between:breakBetween,special_hours:specialDays}).eq('id',currentBusiness.id);
+  currentBusiness.name=name; currentBusiness.work_start=workStart; currentBusiness.work_end=workEnd; currentBusiness.work_days=workDays; currentBusiness.break_between=breakBetween; currentBusiness.special_hours=specialDays;
+  document.getElementById('header-biz-name').textContent=name;
+  showToast('נשמר בהצלחה! ✅');
+}
+
+// ===== HELP =====
+function toggleHelp(){const p=document.getElementById('help-panel');p.style.display=p.style.display==='none'?'block':'none';}
+function hideHelpForever(){document.getElementById('help-panel').style.display='none';document.getElementById('help-btn').style.display='none';localStorage.setItem('boovik-help-hidden','1');}
+
+// ===== UTILS =====
+function showToast(msg,type='success'){
+  const existing=document.querySelector('.toast'); if(existing)existing.remove();
+  const t=document.createElement('div'); t.className=`toast ${type}`;
+  t.innerHTML=`${type==='success'?'✅':'❌'} ${msg}`;
+  document.body.appendChild(t); setTimeout(()=>t.remove(),3000);
+}
+function showPage(id){document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById(id).classList.add('active');}
+function formatDate(dateStr){if(!dateStr)return'';const[y,m,d]=dateStr.split('-');return`${d}/${m}`;}
+function formatDateFull(dateStr){if(!dateStr)return'';const[y,m,d]=dateStr.split('-');const date=new Date(parseInt(y),parseInt(m)-1,parseInt(d));return`יום ${hebrewDays[date.getDay()]}, ${d}/${m}/${y}`;}
+function statusLabel(s){return{booked:'הוזמן 🔵',confirmed:'מאושר ✅',done:'הסתיים',cancelled:'בוטל',blocked:'חסום'}[s]||s;}
+
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.getElementById('sidebar-overlay').classList.toggle('show');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('show');
+}
+
+function copyLink(){
+  const link='https://'+document.getElementById('booking-link').textContent;
+  navigator.clipboard.writeText(link).then(()=>{showToast('הלינק הועתק! 🔗');});
+}
+async function downloadQR(){
+  const url='https://'+document.getElementById('booking-link').textContent;
+  const bizName=currentBusiness?.name||'Boovik';
+  const canvas=document.createElement('canvas'); canvas.width=800; canvas.height=1000;
+  const ctx=canvas.getContext('2d');
+  ctx.fillStyle='#ffffff'; ctx.fillRect(0,0,800,1000);
+  const grad=ctx.createLinearGradient(0,0,800,0); grad.addColorStop(0,'#04091a'); grad.addColorStop(1,'#1e56d6');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,800,140);
+  ctx.fillStyle='#ffffff'; ctx.font='bold 52px Arial'; ctx.textAlign='center'; ctx.fillText('Boovik',400,78);
+  ctx.fillStyle='rgba(255,255,255,0.7)'; ctx.font='22px Arial'; ctx.fillText('מערכת זימון תורים מתקדמת',400,115);
+  ctx.fillStyle='#0d1f3c'; ctx.font='bold 36px Arial'; ctx.fillText(bizName,400,205);
+  ctx.fillStyle='#64748b'; ctx.font='22px Arial'; ctx.fillText('סרוק להזמנת תור אונליין',400,245);
+  const qrUrl=`https://api.qrserver.com/v1/create-qr-code/?size=460x460&data=${encodeURIComponent(url)}&color=0d1f3c&bgcolor=ffffff`;
+  const qrImg=new Image(); qrImg.crossOrigin='anonymous';
+  qrImg.onload=()=>{
+    ctx.fillStyle='#f0f5ff'; ctx.beginPath(); ctx.roundRect(145,265,510,510,20); ctx.fill();
+    ctx.drawImage(qrImg,170,290,460,460);
+    ctx.fillStyle='#0d1f3c'; ctx.font='bold 19px Arial'; ctx.fillText('📅 24/7 · ✅ בלי להתקשר · 💬 תזכורת אוטומטית',400,835);
+    ctx.fillStyle='#1e56d6'; ctx.font='17px Arial'; ctx.fillText(url,400,875);
+    const fGrad=ctx.createLinearGradient(0,920,800,920); fGrad.addColorStop(0,'#04091a'); fGrad.addColorStop(1,'#1e56d6');
+    ctx.fillStyle=fGrad; ctx.fillRect(0,920,800,80);
+    ctx.fillStyle='rgba(255,255,255,0.8)'; ctx.font='18px Arial'; ctx.fillText('Powered by Boovik.com',400,968);
+    const link=document.createElement('a'); link.download=`boovik-qr-${bizName}.png`; link.href=canvas.toDataURL('image/png'); link.click();
+  };
+  qrImg.onerror=()=>showToast('שגיאה בברקוד','error');
+  qrImg.src=qrUrl;
+}
+
+// ===== INIT =====
+db.auth.getSession().then(({data})=>{if(data.session){currentUser=data.session.user;loadApp();}});
+</script>
+</body>
+</html>
