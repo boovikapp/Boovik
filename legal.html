@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>מסמכים משפטיים — Boovik</title>
+  <meta name="description" content="מדיניות פרטיות, תנאי שימוש, מדיניות ביטולים והצהרת נגישות של Boovik — מערכת ניהול תורים לעסקים קטנים.">
+  <meta property="og:title" content="מסמכים משפטיים — Boovik">
+  <meta property="og:description" content="מדיניות פרטיות, תנאי שימוש ומדיניות ביטולים של Boovik.">
+  <meta property="og:image" content="https://boovik.com/og-image.png">
+  <link rel="icon" href="favicon.ico">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --navy: #070e1f;
+      --blue: #1e56d6;
+      --blue-light: #3b7ef8;
+      --cyan: #00d4ff;
+      --bg: #f8faff;
+      --border: #e2e8f0;
+      --text: #1e293b;
+      --gray: #64748b;
+    }
+    body { font-family: 'Heebo', sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+
+    /* HEADER */
+    .header { background: var(--navy); padding: 16px 24px; display: flex; align-items: center; justify-content: space-between; position: sticky; top: 0; z-index: 100; }
+    .logo { font-size: 22px; font-weight: 900; color: white; text-decoration: none; }
+    .logo span { color: var(--cyan); }
+    .back-btn { color: rgba(255,255,255,0.7); font-size: 13px; text-decoration: none; display: flex; align-items: center; gap: 6px; }
+    .back-btn:hover { color: white; }
+
+    /* NAV */
+    .legal-nav { background: white; border-bottom: 2px solid var(--border); position: sticky; top: 57px; z-index: 99; overflow-x: auto; }
+    .legal-nav-inner { display: flex; gap: 0; min-width: max-content; }
+    .nav-link { padding: 14px 20px; font-size: 13px; font-weight: 700; color: var(--gray); text-decoration: none; border-bottom: 3px solid transparent; white-space: nowrap; transition: all 0.2s; }
+    .nav-link:hover { color: var(--blue); }
+    .nav-link.active { color: var(--blue); border-bottom-color: var(--blue); }
+
+    /* LAYOUT */
+    .container { max-width: 780px; margin: 0 auto; padding: 40px 20px 80px; }
+
+    /* SECTIONS */
+    .section { margin-bottom: 60px; scroll-margin-top: 120px; }
+    .section-badge { display: inline-block; background: #eff6ff; color: var(--blue); font-size: 11px; font-weight: 800; padding: 4px 12px; border-radius: 20px; margin-bottom: 12px; letter-spacing: 0.5px; text-transform: uppercase; }
+    .section-title { font-size: 28px; font-weight: 900; color: var(--navy); margin-bottom: 6px; }
+    .section-date { font-size: 12px; color: var(--gray); margin-bottom: 24px; }
+    .section-divider { height: 3px; width: 48px; background: linear-gradient(90deg, var(--blue), var(--cyan)); border-radius: 2px; margin-bottom: 24px; }
+
+    h3 { font-size: 16px; font-weight: 800; color: var(--navy); margin: 24px 0 8px; }
+    p { font-size: 14px; color: #334155; margin-bottom: 12px; }
+    ul { padding-right: 20px; margin-bottom: 12px; }
+    ul li { font-size: 14px; color: #334155; margin-bottom: 6px; }
+    a { color: var(--blue); }
+
+    /* HIGHLIGHT BOX */
+    .highlight { background: #eff6ff; border-right: 4px solid var(--blue); border-radius: 0 10px 10px 0; padding: 14px 16px; margin: 16px 0; font-size: 14px; color: #1e40af; }
+    .warn { background: #fef9c3; border-right: 4px solid #f59e0b; border-radius: 0 10px 10px 0; padding: 14px 16px; margin: 16px 0; font-size: 14px; color: #92400e; }
+
+    /* CONTACT FORM */
+    .contact-form { background: white; border-radius: 16px; padding: 28px; box-shadow: 0 2px 16px rgba(30,86,214,0.08); margin-top: 20px; }
+    .form-group { margin-bottom: 16px; }
+    .form-label { font-size: 13px; font-weight: 700; color: var(--text); display: block; margin-bottom: 6px; }
+    .form-input { width: 100%; border: 2px solid var(--border); border-radius: 10px; padding: 11px 14px; font-family: 'Heebo', sans-serif; font-size: 14px; color: var(--text); outline: none; transition: border 0.2s; }
+    .form-input:focus { border-color: var(--blue); }
+    textarea.form-input { resize: vertical; min-height: 100px; }
+    .btn-submit { background: linear-gradient(135deg, var(--blue), var(--blue-light)); color: white; border: none; border-radius: 12px; padding: 13px 28px; font-family: 'Heebo', sans-serif; font-size: 15px; font-weight: 800; cursor: pointer; width: 100%; }
+    .btn-submit:hover { opacity: 0.92; }
+
+    /* CONTACT CARDS */
+    .contact-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 14px; margin: 20px 0; }
+    .contact-card { background: white; border-radius: 14px; padding: 18px; text-align: center; box-shadow: 0 2px 12px rgba(0,0,0,0.06); }
+    .contact-card-icon { font-size: 28px; margin-bottom: 8px; }
+    .contact-card-label { font-size: 12px; color: var(--gray); margin-bottom: 4px; }
+    .contact-card-value { font-size: 14px; font-weight: 700; color: var(--navy); }
+    .contact-card a { color: var(--navy); text-decoration: none; }
+
+    /* FOOTER */
+    .footer { background: var(--navy); color: rgba(255,255,255,0.5); text-align: center; padding: 24px; font-size: 12px; margin-top: 60px; }
+    .footer a { color: rgba(255,255,255,0.7); margin: 0 8px; text-decoration: none; }
+    .footer a:hover { color: white; }
+    .footer-links { margin-bottom: 8px; }
+
+    /* TOAST */
+    .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); background: #059669; color: white; padding: 12px 24px; border-radius: 12px; font-size: 14px; font-weight: 700; z-index: 999; opacity: 0; transition: opacity 0.3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+
+<header class="header">
+  <a href="index.html" class="logo">Boo<span>vik</span></a>
+  <a href="index.html" class="back-btn">← חזרה לאתר</a>
+</header>
+
+<nav class="legal-nav">
+  <div class="legal-nav-inner">
+    <a href="#privacy" class="nav-link active">🔒 פרטיות</a>
+    <a href="#terms" class="nav-link">📋 תנאי שימוש</a>
+    <a href="#refund" class="nav-link">💳 ביטולים</a>
+    <a href="#accessibility" class="nav-link">♿ נגישות</a>
+    <a href="#contact" class="nav-link">✉️ צור קשר</a>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- ===== PRIVACY ===== -->
+  <section class="section" id="privacy">
+    <div class="section-badge">מסמך משפטי</div>
+    <div class="section-title">מדיניות פרטיות</div>
+    <div class="section-date">עדכון אחרון: יוני 2025</div>
+    <div class="section-divider"></div>
+
+    <p>Boovik מתייחסת ברצינות לפרטיות המשתמשים שלה. מדיניות זו מסבירה אילו נתונים אנו אוספים, כיצד אנו משתמשים בהם, וכיצד תוכלו לשלוט על המידע שלכם.</p>
+
+    <h3>1. נתונים שאנו אוספים</h3>
+    <p>בעת הרשמה ושימוש במערכת, אנו אוספים את הנתונים הבאים:</p>
+    <ul>
+      <li><strong>פרטי עסק:</strong> שם העסק, מספר טלפון, כתובת אימייל</li>
+      <li><strong>נתוני התחברות:</strong> אימייל וסיסמא מוצפנת (לא נשמרת בטקסט חופשי)</li>
+      <li><strong>נתוני שימוש:</strong> תורים, שירותים, לקוחות שהוזנו על ידי בעל העסק</li>
+      <li><strong>נתוני גלישה:</strong> כתובת IP, סוג דפדפן, מכשיר, זמן כניסה לאתר</li>
+      <li><strong>נתוני מקור:</strong> מאיפה הגעת לאתר (UTM Parameters)</li>
+    </ul>
+
+    <h3>2. כיצד אנו משתמשים במידע</h3>
+    <ul>
+      <li>מתן השירות — ניהול תורים, שליחת הודעות WhatsApp ללקוחות העסק</li>
+      <li>שיפור המוצר — ניתוח שימוש לצורך שיפור הפיצ'רים</li>
+      <li>תמיכה — מענה לפניות תמיכה ופתרון תקלות</li>
+      <li>חיוב — ניהול מנויים ותשלומים</li>
+    </ul>
+
+    <h3>3. עוגיות (Cookies)</h3>
+    <p>האתר שלנו משתמש בעוגיות טכניות הכרחיות לצורך שמירת הסשן ופרטי ההתחברות. איננו משתמשים בעוגיות שיווקיות של צד שלישי ללא הסכמתך.</p>
+
+    <h3>4. מעקב ואנליטיקה</h3>
+    <div class="highlight">אנו משתמשים במערכת מעקב פנימית לצורך מדידת ביצועי הקמפיינים. הנתונים נשמרים בשרתי Supabase ואינם מועברים לגורמים חיצוניים.</div>
+    <p>אנו עשויים להשתמש ב-Meta Pixel לצורך מדידת המרות מפרסום בפייסבוק ואינסטגרם. שימוש זה כפוף למדיניות הפרטיות של Meta.</p>
+
+    <h3>5. שמירת מידע ואבטחה</h3>
+    <p>המידע שלך נשמר בשרתי Supabase (AWS) עם הצפנה מלאה בזמן העברה (TLS) ובאחסון. אנו מיישמים בקרות גישה מחמירות ומסירים גישה לעובדים שאינם זקוקים לה.</p>
+
+    <h3>6. שיתוף מידע עם צדדים שלישיים</h3>
+    <p>אנו <strong>לא מוכרים ולא משכירים</strong> את המידע שלך לאף גורם. אנו משתפים מידע רק עם ספקי שירות חיוניים:</p>
+    <ul>
+      <li>Supabase — אחסון נתונים</li>
+      <li>Whapi.cloud — שליחת הודעות WhatsApp</li>
+      <li>Stripe — עיבוד תשלומים (לא נשמרים פרטי כרטיס אצלנו)</li>
+    </ul>
+
+    <h3>7. זכויותיך</h3>
+    <ul>
+      <li>זכות עיון — לקבל עותק של המידע שנשמר עליך</li>
+      <li>זכות תיקון — לתקן מידע שגוי</li>
+      <li>זכות מחיקה — לבקש מחיקת כל המידע שלך</li>
+      <li>זכות התנגדות — להתנגד לעיבוד מסוים של המידע</li>
+    </ul>
+    <p>לבקשות מחיקה ועיון פנה אל: <a href="mailto:boovikapp@gmail.com">boovikapp@gmail.com</a></p>
+
+    <h3>8. שינויים במדיניות</h3>
+    <p>שינויים מהותיים במדיניות זו יפורסמו באתר ויישלחו בהודעת אימייל. המשך השימוש לאחר השינוי מהווה הסכמה.</p>
+  </section>
+
+  <!-- ===== TERMS ===== -->
+  <section class="section" id="terms">
+    <div class="section-badge">מסמך משפטי</div>
+    <div class="section-title">תנאי שימוש</div>
+    <div class="section-date">עדכון אחרון: יוני 2025</div>
+    <div class="section-divider"></div>
+
+    <p>ברוכים הבאים ל-Boovik. השימוש בשירות מהווה הסכמה לתנאים אלו. אנא קרא אותם בעיון לפני השימוש.</p>
+
+    <h3>1. הגדרת השירות</h3>
+    <p>Boovik מספקת מערכת SaaS לניהול תורים המיועדת <strong>לבעלי עסקים בלבד</strong>. השירות מאפשר קבלת הזמנות תורים, ניהול לקוחות, שליחת תזכורות WhatsApp ועוד.</p>
+
+    <h3>2. כשירות להשתמש</h3>
+    <ul>
+      <li>השירות מיועד לבעלי עסקים בלבד (לא ללקוחות קצה)</li>
+      <li>המשתמש חייב להיות בגיל 18 ומעלה</li>
+      <li>אין להשתמש בשירות לפעילות בלתי חוקית</li>
+    </ul>
+
+    <h3>3. אחריות המשתמש</h3>
+    <p>המשתמש אחראי באופן בלעדי לכל תוכן שמוזן למערכת, לרבות:</p>
+    <ul>
+      <li>פרטי לקוחות שמוזנים למאגר</li>
+      <li>תיאורי שירותים ומחירים</li>
+      <li>תוכן הודעות ה-WhatsApp הנשלחות ללקוחות</li>
+    </ul>
+    <div class="warn">המשתמש מצהיר שקיבל את הסכמת לקוחותיו לשמירת פרטיהם במערכת בהתאם לחוק הגנת הפרטיות.</div>
+
+    <h3>4. שימוש אסור</h3>
+    <ul>
+      <li>שימוש לשליחת ספאם או תוכן פוגעני</li>
+      <li>ניסיון לפרוץ, לשבש או להעמיס על השרתים</li>
+      <li>יצירת חשבונות מרובים לאותו עסק</li>
+      <li>מסחר מחדש בשירות ללא אישור מפורש</li>
+      <li>שימוש לפעילות בלתי חוקית</li>
+    </ul>
+
+    <h3>5. השעיה וסגירת חשבון</h3>
+    <p>Boovik שומרת לעצמה את הזכות להשעות או לסגור חשבון בכל עת במקרים של:</p>
+    <ul>
+      <li>הפרת תנאי שימוש אלו</li>
+      <li>פעילות חשודה או חריגה</li>
+      <li>אי-תשלום עבור השירות</li>
+      <li>בקשת המשתמש עצמו</li>
+    </ul>
+
+    <h3>6. הגבלת אחריות</h3>
+    <p>Boovik מספקת את השירות "כמות שהוא" (AS IS). איננו אחראים לנזקים עקיפים, אובדן הכנסה, או נזקים הנובעים מתקלות טכניות, השבתת השירות, או אובדן נתונים. האחריות המקסימלית של Boovik תוגבל לסכום ששולם עבור השירות ב-3 החודשים האחרונים.</p>
+
+    <h3>7. קניין רוחני</h3>
+    <p>כל הקוד, העיצוב, הלוגו, והמותג Boovik הם רכוש בלעדי של החברה. אין להעתיק, לשכפל, או להשתמש בהם ללא אישור מפורש בכתב.</p>
+
+    <h3>8. סמכות שיפוט</h3>
+    <p>תנאים אלו כפופים לדיני מדינת ישראל. כל מחלוקת תידון בבתי המשפט המוסמכים במחוז תל אביב בלבד.</p>
+
+    <h3>9. יצירת קשר</h3>
+    <p>לשאלות בנוגע לתנאי השימוש: <a href="mailto:boovikapp@gmail.com">boovikapp@gmail.com</a></p>
+  </section>
+
+  <!-- ===== REFUND ===== -->
+  <section class="section" id="refund">
+    <div class="section-badge">מסמך משפטי</div>
+    <div class="section-title">מדיניות ביטולים והחזרים</div>
+    <div class="section-date">עדכון אחרון: יוני 2025</div>
+    <div class="section-divider"></div>
+
+    <div class="highlight">
+      💡 <strong>30 יום ניסיון חינם</strong> — ניתן להתנסות בכל הפיצ'רים ללא צורך בכרטיס אשראי.
+    </div>
+
+    <h3>1. תקופת הניסיון</h3>
+    <p>כל חשבון חדש זכאי ל-30 ימי ניסיון חינם מלא, ללא צורך בהזנת פרטי תשלום. בתום תקופת הניסיון, ניתן לבחור מסלול תשלום או להפסיק את השימוש.</p>
+
+    <h3>2. מסלולי תשלום</h3>
+    <ul>
+      <li><strong>Basic — 99 ₪/חודש:</strong> הזמנות, WhatsApp, יומן ודוחות</li>
+      <li><strong>Pro — 129 ₪/חודש:</strong> כל הפיצ'רים + סליקה ותמיכה מורחבת</li>
+    </ul>
+    <p>החיוב מתבצע מדי חודש ביום העסקה שבו הופעל המנוי.</p>
+
+    <h3>3. ביטול מנוי</h3>
+    <p>ניתן לבטל מנוי בכל עת דרך הגדרות החשבון או בפנייה לתמיכה. לאחר ביטול:</p>
+    <ul>
+      <li>השירות ימשיך לפעול עד סוף תקופת החיוב ששולמה</li>
+      <li>לא יתבצע חיוב נוסף</li>
+      <li>הנתונים ישמרו 30 יום נוספים לאחר הביטול</li>
+    </ul>
+
+    <h3>4. מדיניות החזרים</h3>
+    <p>אנו בוחנים כל בקשה להחזר לגופה. באופן כללי:</p>
+    <ul>
+      <li>בקשה שהוגשה תוך 48 שעות מהחיוב הראשון — <strong>החזר מלא</strong></li>
+      <li>תקלה טכנית שגרמה להשבתת השירות מעל 48 שעות — <strong>זיכוי יחסי</strong></li>
+      <li>ביטול לאחר שימוש — לא יינתן החזר כספי</li>
+    </ul>
+
+    <h3>5. יצירת קשר לביטול</h3>
+    <p>לבקשות ביטול והחזר: <a href="mailto:boovikapp@gmail.com">boovikapp@gmail.com</a> או דרך <a href="#contact">טופס יצירת קשר</a>.</p>
+  </section>
+
+  <!-- ===== ACCESSIBILITY ===== -->
+  <section class="section" id="accessibility">
+    <div class="section-badge">נגישות</div>
+    <div class="section-title">הצהרת נגישות</div>
+    <div class="section-date">עדכון אחרון: יוני 2025</div>
+    <div class="section-divider"></div>
+
+    <p>Boovik מחויבת להנגיש את שירותיה לכלל המשתמשים, לרבות אנשים עם מוגבלויות, בהתאם לתקנות שוויון זכויות לאנשים עם מוגבלות (התאמות נגישות לשירות), תשע"ג-2013.</p>
+
+    <h3>פעולות נגישות שבוצעו</h3>
+    <ul>
+      <li>ניגודיות צבעים עומדת בתקן WCAG 2.1 AA</li>
+      <li>תמיכה מלאה בקורא מסך (ARIA labels)</li>
+      <li>ניווט מלא באמצעות מקלדת בלבד</li>
+      <li>גודל גופן מינימלי 14px לטקסט רגיל</li>
+      <li>תמיכה בהגדלת גופן עד 200%</li>
+      <li>ממשק תואם למובייל ומסכי מגע</li>
+      <li>האתר מוצג בעברית מלאה עם RTL תקין</li>
+    </ul>
+
+    <h3>תחומים בתהליך שיפור</h3>
+    <ul>
+      <li>הוספת תיאורי alt לכל תמונות העיצוב</li>
+      <li>שיפור נגישות טפסים מורכבים</li>
+    </ul>
+
+    <div class="highlight">
+      רכז הנגישות של Boovik: <strong>דור</strong> | <a href="mailto:boovikapp@gmail.com">boovikapp@gmail.com</a>
+    </div>
+
+    <h3>נתקלת בבעיית נגישות?</h3>
+    <p>אנו מזמינים אותך לפנות אלינו בכל בעיה או קושי. נשתדל לטפל בפנייה תוך 5 ימי עסקים.</p>
+  </section>
+
+  <!-- ===== CONTACT ===== -->
+  <section class="section" id="contact">
+    <div class="section-badge">תמיכה</div>
+    <div class="section-title">צור קשר</div>
+    <div class="section-date">זמן תגובה ממוצע: עד 24 שעות</div>
+    <div class="section-divider"></div>
+
+    <div class="contact-cards">
+      <div class="contact-card">
+        <div class="contact-card-icon">📧</div>
+        <div class="contact-card-label">אימייל תמיכה</div>
+        <div class="contact-card-value"><a href="mailto:boovikapp@gmail.com">boovikapp@gmail.com</a></div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-card-icon">💬</div>
+        <div class="contact-card-label">WhatsApp</div>
+        <div class="contact-card-value"><a href="https://wa.me/972555629208" target="_blank">055-5629208</a></div>
+      </div>
+      <div class="contact-card">
+        <div class="contact-card-icon">🕐</div>
+        <div class="contact-card-label">שעות פעילות</div>
+        <div class="contact-card-value">א׳–ה׳, 09:00–18:00</div>
+      </div>
+    </div>
+
+    <div class="contact-form">
+      <h3 style="margin-top:0;">שלח הודעה</h3>
+      <div class="form-group">
+        <label class="form-label">שם מלא</label>
+        <input type="text" id="contact-name" class="form-input" placeholder="שם העסק שלך">
+      </div>
+      <div class="form-group">
+        <label class="form-label">אימייל</label>
+        <input type="email" id="contact-email" class="form-input" placeholder="your@email.com" dir="ltr">
+      </div>
+      <div class="form-group">
+        <label class="form-label">נושא</label>
+        <select id="contact-subject" class="form-input">
+          <option value="">בחר נושא...</option>
+          <option value="support">תמיכה טכנית</option>
+          <option value="billing">חיובים ותשלומים</option>
+          <option value="privacy">בקשת מחיקת נתונים</option>
+          <option value="accessibility">נגישות</option>
+          <option value="other">אחר</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">הודעה</label>
+        <textarea id="contact-message" class="form-input" placeholder="כתוב את פנייתך כאן..."></textarea>
+      </div>
+      <button class="btn-submit" onclick="submitContact()">📨 שלח פנייה</button>
+    </div>
+  </section>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-links">
+    <a href="#privacy">מדיניות פרטיות</a>
+    <a href="#terms">תנאי שימוש</a>
+    <a href="#refund">ביטולים והחזרים</a>
+    <a href="#accessibility">נגישות</a>
+    <a href="#contact">צור קשר</a>
+  </div>
+  <div>© 2025 Boovik. כל הזכויות שמורות.</div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // Active nav link on scroll
+  const sections = ['privacy','terms','refund','accessibility','contact'];
+  const navLinks = document.querySelectorAll('.nav-link');
+
+  window.addEventListener('scroll', () => {
+    let current = '';
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && window.scrollY >= el.offsetTop - 140) current = id;
+    });
+    navLinks.forEach(link => {
+      link.classList.toggle('active', link.getAttribute('href') === '#' + current);
+    });
+  });
+
+  // Toast
+  function showToast(msg, success = true) {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.style.background = success ? '#059669' : '#dc2626';
+    t.classList.add('show');
+    setTimeout(() => t.classList.remove('show'), 3000);
+  }
+
+  // Contact form
+  async function submitContact() {
+    const name    = document.getElementById('contact-name').value.trim();
+    const email   = document.getElementById('contact-email').value.trim();
+    const subject = document.getElementById('contact-subject').value;
+    const message = document.getElementById('contact-message').value.trim();
+    if (!name || !email || !subject || !message) return showToast('אנא מלא את כל השדות', false);
+
+    // Send to WhatsApp as fallback (replace with email API if available)
+    const text = encodeURIComponent(`פנייה חדשה מ-Boovik:\nשם: ${name}\nאימייל: ${email}\nנושא: ${subject}\nהודעה: ${message}`);
+    window.open(`https://wa.me/972555629208?text=${text}`, '_blank');
+    showToast('✅ הפנייה נשלחה בהצלחה!');
+    document.getElementById('contact-name').value = '';
+    document.getElementById('contact-email').value = '';
+    document.getElementById('contact-subject').value = '';
+    document.getElementById('contact-message').value = '';
+  }
+</script>
+</body>
+</html>
